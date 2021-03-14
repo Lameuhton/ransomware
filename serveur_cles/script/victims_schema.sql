@@ -18,7 +18,7 @@ CREATE TABLE decrypted (
     datetime DATE,
     nb_file INT,
     FOREIGN KEY (id_victim) REFERENCES Victims(id_victim)
-
+pd
 );
 
 CREATE TABLE states (
