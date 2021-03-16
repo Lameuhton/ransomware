@@ -1,49 +1,59 @@
 import socket
 import ipaddress
 
+buffersize = 2048
 
 def start_net_serv_client():
-    buffersize = 2048
+    # création d'un socket
+    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
 
-    # create socket en UDP
-    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 et TCP
-
-    # bind socket to address and port
+    # Liaison de du socket sur l'ip 0.0.0.0 (local) et le port 8380
     s.bind(("0.0.0.0", 8380))
-
+    
+    # Permet au serveur d'attendre une connexion 
     s.listen(0)
 
-    # listen for data forever and reply with moyen
+    # accepter une connexion
     conn, addr = s.accept()
+    # return:
+            # conn : est un nouvel objet socket utilisable pour envoyer et recevoir des données sur la connexion
+            # addr : adresse lié à l'autre socket de connexion; adresse du client
     print(f"Connected to {ipaddress.IPv4Address(addr[0])}:{addr[1]}")
     return conn, addr, buffersize
 
 def connect_to_serv():
-    # coding: utf8
-    import socket
-
-    # Variables de travail
-    buffersize = 2048
-
-    # create socket
-    socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 et TCP
-
+    # Création du socket
+    socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
+    
+    # Se connecte au serveur d'ip "localhost" avec comme port 8380
     socket_serv.connect(("localhost", 8380))
     return socket_serv, buffersize
 
 def send_message(socket_serv):
+    # Création d'un message
     message = input()
-    # create bytes object Str --> Bytes
+    
+    # Encodage du message en bytes
     msg = str.encode(message)
 
-    # send message
+    # envoie du message en local sur le port 8380
     socket_serv.sendto(msg, ("127.0.0.1", 8380))
 
 
 def receive_message(socket, buffersize):
+    # Attend de recevoir une donnée qui sera séparé en :
+        # data : les données
+        # addr: le duo addresse:port
     data, addr = socket.recvfrom(buffersize)
+    
+    # Décode le message (qui est reçu en Bytes)
+        # Bytes -> String
     message = data.decode()
+    
+    # Partie du code servant à quitter le serveur / le client 
+        # (sera peut-être enlevé en fonction des problèmes / besoins)
     if message == 'quit':
-        print(f"Au-revoir")
+        print(f"Au-revoir {addr}")
+        quit()
     else:
-        print(f"{message}")
+        print(f"{message")
