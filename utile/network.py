@@ -56,4 +56,4 @@ def receive_message(socket, buffersize):
         print(f"Au-revoir {addr}")
         quit()
     else:
-        print(f"{message")
+        print(f"{message}")
