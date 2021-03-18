@@ -1,6 +1,5 @@
 import socket
 import ipaddress
-import pickle
 
 buffersize = 2048
 
@@ -31,25 +30,15 @@ def connect_to_serv():
     socket_serv.connect(("localhost", 8380))
     return socket_serv, buffersize
 
-def send_message(socket_serv, msg):
-    # encodage du fichier via pickle
-    data_string = pickle.dumps(msg)
+def send_message(socket_serv, binary_data):
     # envoie du message en local sur le port 8380
-    socket_serv.sendto(data_string, ("127.0.0.1", 8380))
+    socket_serv.sendto(binary_data, ("127.0.0.1", 8380))
 
 
 def receive_message(socket, buffersize):
-
     # Attend de recevoir une donnée qui sera séparé en :
         # data : les données
         # addr: le duo addresse:port
     data, addr = socket.recvfrom(buffersize)
-
-    # Décode le message (qui est reçu en Bytes)
-        # Bytes -> String
-    message = pickle.loads(data)
-
-    # Partie du code servant à quitter le serveur / le client
-    # (sera peut-être enlevé en fonction des problèmes / besoins)
-    return message
+    return data
 
