@@ -10,12 +10,12 @@ curseur.executescript("""--ajouter dans la bd--
 
 #chercher dans la bd
 #python
-def recup_data_victim(numero, id=None):
-    if numero ==1
-    curseur.execute("SELECT * FROM enter")
-    resultats = curseur.fetchall()
-    for resultat in resultats:
-    list.append(resultat)
+def recup_data_victime(numero, id=None):
+    if numero ==1:
+        curseur.execute("SELECT * FROM victims")
+        resultats = curseur.fetchall()
+        for resultat in resultats:
+            list.append(resultat)
     return resultat
 
 connexion.close()  #Déconnexion
