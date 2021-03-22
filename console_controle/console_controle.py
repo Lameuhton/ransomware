@@ -1,7 +1,7 @@
 import sqlite3
-from ..utile import network
+#from ..utile import network
 from ..utile import data
-from ..utile import message
+#from ..utile import message
 
 # NOTE
 #___________________________________________
