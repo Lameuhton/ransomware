@@ -1,12 +1,12 @@
 import socket
 import ipaddress
-
+import pickle
+HEADERSIZE = 10
 buffersize = 2048
 
 def start_net_serv_client():
     # création d'un socket
     s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
-    print(s)
 
     # Liaison de du socket sur l'ip 0.0.0.0 (local) et le port 8380
     s.bind(("0.0.0.0", 8380))
@@ -22,6 +22,7 @@ def start_net_serv_client():
     print(f"Connected to {ipaddress.IPv4Address(addr[0])}:{addr[1]}")
     return conn, addr, buffersize
 
+
 def connect_to_serv():
     # Création du socket
     socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
@@ -30,15 +31,21 @@ def connect_to_serv():
     socket_serv.connect(("localhost", 8380))
     return socket_serv, buffersize
 
-def send_message(socket_serv, binary_data):
+
+def send_message(socket_serv, string_data):
     # envoie du message en local sur le port 8380
-    socket_serv.sendto(binary_data, ("127.0.0.1", 8380))
+    convert_bytes = pickle.dumps(string_data)
+    convert_bytes = bytes(f"{len(convert_bytes):010d}", 'utf-8') + convert_bytes
+    socket_serv.sendto(convert_bytes, ("127.0.0.1", 8380))
 
 
-def receive_message(socket, buffersize):
+def receive_message(socket):
     # Attend de recevoir une donnée qui sera séparé en :
         # data : les données
         # addr: le duo addresse:port
-    data, addr = socket.recvfrom(buffersize)
-    return data
+
+    header_from_message, addr = socket.recvfrom(HEADERSIZE)
+    data, addr = socket.recvfrom(int(header_from_message))
+    unpickled = pickle.loads(data)
+    return unpickled
 
