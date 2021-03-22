@@ -20,7 +20,7 @@ def start_net_serv_client():
             # conn : est un nouvel objet socket utilisable pour envoyer et recevoir des données sur la connexion
             # addr : adresse lié à l'autre socket de connexion; adresse du client
     print(f"Connected to {ipaddress.IPv4Address(addr[0])}:{addr[1]}")
-    return conn, addr, buffersize
+    return conn
 
 
 def connect_to_serv():
@@ -29,7 +29,7 @@ def connect_to_serv():
     print(socket_serv)
     # Se connecte au serveur d'ip "localhost" avec comme port 8380
     socket_serv.connect(("localhost", 8380))
-    return socket_serv, buffersize
+    return socket_serv
 
 
 def send_message(socket_serv, string_data):
