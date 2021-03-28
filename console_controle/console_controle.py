@@ -11,9 +11,21 @@ from ..utile import data
 # Si la valeur est a 1, la fonction devra me renvoyer exactement ce qu'il me faut à afficher pour le choix 1, si elle est a 2, je fournirai alors une valeur au paramètre "id_victime"
 #___________________________________________
 
+def choix_victime(new_data_victimes):
+    # Demande du numéro de la victime
+    nb_victime = len(new_data_victimes)
+    num_victime = int(input("Entrez le numéro de la victime (de 1 à 4):"))
+
+    # Vérification de l'input de l'utilisateur
+    while 1 > num_victime > nb_victime:
+        print(f"Erreur: veuillez entrer un nombre entre 1 et {nb_victime}")
+        num_victime = int(input(f"Entrez le numéro de la victime (entre 1 et : {nb_victime}"))
+
+    return num_victime
+
 def choix_action():
-    #Cette fonction, lorsqu'elle est appelée, affiche un menu et demande à l'utilisateur d'entrer le choix correspondant.
-    #Elle retourne un entier entre 1 et 4 qui est le choix de la personne.
+    """Cette fonction, lorsqu'elle est appelée, affiche un menu et demande à l'utilisateur d'entrer le choix correspondant.
+    Elle retourne un entier entre 1 et 4 qui est le choix de la personne."""
 
     menu = "CONSOLE DE CONTRÔLE\n===================\n1) Liste des victimes du ransomware\n2) Historique des états d'une victime\n3) Renseigner le payement de rançon d'une victime\n4) Quitter\nVotre choix: "
     choix = int(input(menu))
@@ -43,18 +55,11 @@ def afficher_liste_victime(new_data_victimes):
 
 def afficher_historique_victime(new_data_victimes):
 
-    #Demande du numéro de la victime
-    nb_victime = len(new_data_victimes)
-    num_victime = int(input(f"Entrez le numéro de la victime (entre 1 et : {nb_victime}"))
-
-    #Vérification de l'input de l'utilisateur
-    while 1 > num_victime > nb_victime:
-        print(f"Erreur: veuillez entrer un nombre entre 1 et {nb_victime}")
-        num_victime = int(input(f"Entrez le numéro de la victime (entre 1 et : {nb_victime}"))
+    victime = choix_victime(new_data_victimes)
 
     #Récupération de l'id de la victime grâce au num que l'utilisateur à entré
     for i in new_data_victimes:
-        if i[0] == str(num_victime):
+        if i[0] == str(victime):
             id_victime = int(i[1])
 
     #Appel de la fonction qui retournera les infos de la victime précise grâce à l'id
@@ -70,45 +75,70 @@ def afficher_historique_victime(new_data_victimes):
 
     return
 
-def afficher_rancon_victime():
-    print(" j'ai affiché les rancons des victimes")
+def afficher_rancon_victime(new_data_victimes):
+
+    print("VALIDER LE PAIEMENT DE RANCON D'UNE VICTIME")
+    print("____________________________________________")
+
+    num_victime = choix_victime(new_data_victimes)
+    victime = new_data_victimes[num_victime-1]
+    etat_victime = str.upper(victime[8])
+
+    while etat_victime == 'INITIALIZE' or etat_victime == 'PROTECTED':
+        print(f"ERREUR : La victime {num_victime} {victime[1]} est en mode {etat_victime}!")
+        num_victime = choix_victime(new_data_victimes)
+        victime = new_data_victimes[num_victime - 1]
+        etat_victime = str.upper(victime[8])
+
+    choix = str.upper(input(f"Confirmez la demande de déchiffrement pour la victime {num_victime} {victime[1]} (O/N):"))
+
+    if choix == 'O':
+
+        #Ici je suis censée envoyer un truc mais jsp comment ni avec quoi :/
+
+        print("La demande est transmise !")
+    else:
+        print("La demande ne sera pas transmise.")
+
     return
 
 
-data_victimes = None
+if __name__ == "__main__":
 
-#Affiche une première fois le menu et stocke le choix
-num_choix = choix_action()
+    data_victimes = None
 
-#Boucle tant que l'utilisateur ne choisi pas le quatrième choix (quitter)
-while num_choix != 4:
-
-    #Premier choix:
-    if num_choix == 1:
-        #Appelle la fonction qui ira récupérer les infos des victimes dans la bdd
-        data_victimes = data.recup_data_victime(1)
-        # A partir de data_victimes, création d'une nouvelle liste de listes (et plus de tuple) avec les infos des victimes
-        new_data_victimes = []
-        for val in data_victimes:
-            new_data_victimes.append(list(val))
-
-        afficher_liste_victime(new_data_victimes)
-
-    #Deuxième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
-    elif num_choix == 2:
-        if data_victimes != None:
-            afficher_historique_victime(new_data_victimes)
-        else:
-            print("\nERREUR : Veuillez d'abord lister les victimes!\n")
-
-    #Troisième choix:
-    elif num_choix == 3:
-        afficher_rancon_victime()
-
+    #Affiche une première fois le menu et stocke le choix
     num_choix = choix_action()
 
+    #Boucle tant que l'utilisateur ne choisi pas le quatrième choix (quitter)
+    while num_choix != 4:
 
-exit()
+        #Premier choix:
+        if num_choix == 1:
+            #Appelle la fonction qui ira récupérer les infos des victimes dans la bdd
+            data_victimes = data.recup_data_victime(1)
+            # A partir de data_victimes, création d'une nouvelle liste de listes (et plus de tuple) avec les infos des victimes
+            new_data_victimes = []
+            for val in data_victimes:
+                new_data_victimes.append(list(val))
+
+            afficher_liste_victime(new_data_victimes)
+
+        #Deuxième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
+        elif num_choix == 2:
+            if data_victimes != None:
+                afficher_historique_victime(new_data_victimes)
+            else:
+                print("\nERREUR : Veuillez d'abord lister les victimes!\n")
+
+        #Troisième choix:
+        elif num_choix == 3:
+            afficher_rancon_victime()
+
+        num_choix = choix_action()
+
+
+    exit()
 
 
 
