@@ -13,7 +13,7 @@ def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     private_key = hashlib.scrypt(
         DiffieHellman_key.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
 
-    # création d'un objet cypher servant à encrypter les données
+    # création d'un objet cypher servant à encrypter les données avec la méthode GCM
     cipher_config = AES.new(private_key, AES.MODE_GCM)
 
     # récupération du texte chiffré et d'un tag

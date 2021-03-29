@@ -1,4 +1,4 @@
---------------------------------------------------# Constante
+# Constante
 DEBUG_MODE = False
 
 # tous les dictionnaires LIST_VICTIM
@@ -72,9 +72,8 @@ def set_message(select_msg, params=None):
 
 
 def get_message_type(message):
-    first_key = list(message.keys())
+    first_key = list(message.keys())[0]
     #if DEBUG_MODE:
     #    print("get_message_type()\n MESSAGE TYPE:", MESSAGE_TYPE[first_key])
     return MESSAGE_TYPE[first_key]
-
 
