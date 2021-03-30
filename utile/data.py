@@ -1,7 +1,7 @@
 import sqlite3
 
 
-def create_connection(path):
+def connect_to_DB(path="../serveur_cles/data/victims.sqlite"):
 
     connection = None
     cursor = None
@@ -12,7 +12,7 @@ def create_connection(path):
         print("Connexion établie")
 
     except sqlite3.Error as e:
-        print(f"Une erreur est survenue : {e}")
+        print(f"Une erreur est survenue dans la connexion: {e}")
 
     return connection, cursor
 
@@ -32,7 +32,8 @@ def execute_query(connection, cursor, query):
             result = cursor.fetchall()
 
     except sqlite3.Error as e:
-        print(f"Erreur rencontree : {e}")
+        print(f"Erreur survenue dans l'execution de la requête: {e}")
+        
     return result
 
 
@@ -54,7 +55,7 @@ def insert(nom_table, value):
 # fait un selct dans _db
 
 
-def select(request, nom_table, condition):
+def select(request, nom_table, condition=None):
 
     string = f"SELECT "
 
@@ -65,7 +66,7 @@ def select(request, nom_table, condition):
     else:
         string += request
 
-    if not (condition == " "):
+    if condition:
         string += " FROM " + str(nom_table) + " WHERE " + condition
     else:
         string += " FROM " + str(nom_table)
@@ -79,11 +80,6 @@ def select(request, nom_table, condition):
 # INSERT INTO `client` (`nom`, `email`) VALUES ('Paul', 'paul@example.com');
 # INSERT INTO `client` (`nom`, `email`) VALUES ('Sandra', 'sandra@example.com');
 
-def get_list_victims(table_name = "Victims"):
-
-    string = f"SELECT * FROM {table_name}"
-
-    return(string)
 
 # garde un historique de _db
 
@@ -96,24 +92,28 @@ def get_victim_history(id_victim):
     # 'datetime' entre quote ?
     string = f"FROM Victims LEFT JOIN States ON Victims.{id_victim} = States.{id_victim} ORDER BY 'datetime' DESC"
 
-    return(string)
-
-
-# change status ? n'est plus attacable
-
-
-def change_status(id_tuple, new_value):
-
-    string = f"UPDATE states SET states = '{new_value}' WHERE id = {id_tuple} "  # Ajouter le fait que on ajoute une date dans states
-    return(string)
+    return string
 
 # update
 
 # Changer la valeur d'un tuple
 
 
-def update(table_name, id_tuple, tuple_name, new_value):
-    
-    string = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
+def update(table_name, tuple_name, new_value, id_tuple=None):
 
-    return(string)
+    if id_tuple:
+        string = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
+
+    else:
+        string = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
+
+    return string
+
+
+def disconnect_from_DB(connection):
+    try:
+        connection.close()  # Déconnexion
+        print('Déconnexion éffectuée')
+
+    except sqlite3.Error as e:
+        print(f"Une erreur est survenue dans la déconnexion: {e}")
