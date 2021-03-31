@@ -2,7 +2,10 @@ import sqlite3
 
 
 def connect_to_DB(path="../serveur_cles/data/victims.sqlite"):
-
+    '''
+    :param path:chemin vers l'endroit où se trouve la bd
+    :return:retourne la connexion et le curseur pour exécuter les commande sql
+    '''
     connection = None
     cursor = None
 
@@ -16,104 +19,138 @@ def connect_to_DB(path="../serveur_cles/data/victims.sqlite"):
 
     return connection, cursor
 
-# a = create_connection(path)
-# execute_query (create_connection(path), "Select * from victims")
+
+
+def insert(table, value,conn = None, cursor= None):
+    '''
+    :param table:table dans laquelle il faut ajouter des valeurs
+    :param value:valeur à ajouter dans la table
+    :return:la commande sql insert
+    '''
+    query = f"INSERT INTO {table} ("
+
+    for x in value:
+        query += x+", "
+    query = query[0:-2]+") VALUES ("
+
+    for x in value:
+        query += str(value[x])+", "
+    query = query[0:-2]+")"
+
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
+
+
+
+def update(table_name, tuple_name, new_value, id_tuple=None, conn = None, cursor= None):
+    '''
+    cette fonction creer une requête de type update avec ou sans condition
+    :param table_name:nom table à mettre à jour
+    :param tuple_name:nom tuple à mettre à jour
+    :param new_value:nouvelle valeur pour le(s) tuple(s)
+    :param id_tuple:id utilisé dans la condition
+    :return:
+    '''
+    if id_tuple:
+        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
+
+    else:
+        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
+
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
+
+
+
+def select(request, nom_table, condition=None, conn = None, cursor= None):
+    '''
+    cette fonction s'occupe de creer une requête sql qui return un string si conn et cursor si ne sont pas renseigné
+    pour l'utiliser plus tard ou l'executer directement si le conn et cursor sont renseigné
+    :param request:si request est une liste, il va séparer les éléments correctement (si[os,hash]--> select os, hash from...)
+    :param nom_table:nom de la table à selectionner (from victims....)
+    :param condition:renseigne la condition WHERE si non renseigné --> ignoré
+    :return: si con et cursor renseigné: execution la commande sql
+                                  sinon: retourne la commande sql en string
+    '''
+
+    query = f"SELECT "
+
+    if type(request) is list:
+        for x in request:
+            query += x + ", "
+        query = query[0:-2]
+    else:
+        query += request
+
+    if condition:
+        query += " FROM " + str(nom_table) + " WHERE " + condition
+    else:
+        query += " FROM " + str(nom_table)
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
+
+
+
+
+def get_victim_history(id_victim=None,conn = None, cursor= None):
+    '''
+    cette fonction construit une commande sql qui demande l'historique des changements d'état d'une victime du ransomware.
+    :param id_victim:renseigne l'id de la victim dont on veut l'historique
+    :return:l'historique de la victime
+    '''
+    query = f"FROM Victims LEFT JOIN States ON Victims.{id_victim} = States.{id_victim} ORDER BY 'datetime' DESC"
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
 
 
 def execute_query(connection, cursor, query):
+    '''
+    cette fonction execute les commandes sql
+    :param connection:bjet sqlite relative à la connection de la bd (carte d'identité)
+    :param cursor:afin d'exécuter nos requêtes, nous allons utiliser le cursor recupéré en faisant appel à la fonction:
+    connection = sqlite3.connect(path)
+    :param query:est la commande sql à executer
+    :return:si con et cursor renseigné: execution la commande sql
+                                 sinon: retourne la commande sql en string
+    '''
     result = None
     try:
-        cursor.execute(query)
+        cursor.execute(query)  # execute la commande sql
         connection.commit()
-        print('[SQL]La requete a ete executee')
 
-        if (query[0:6] == "SELECT"):
-            print('[SQL]Requete SELECT OK')
+        if (query[0:6] == "SELECT"):  # detecte si c'est un "select"
             result = cursor.fetchall()
 
     except sqlite3.Error as e:
         print(f"Erreur survenue dans l'execution de la requête: {e}")
-        
+
     return result
 
 
-# ajoute des valeurs dans _db
-def insert(nom_table, value):
-    # Insert into victim (value)
-    string = f"INSERT INTO {nom_table} ("
-
-    for x in value:                        # ici on récupère le nom de la value
-        string += x+", "                   #
-    string = string[0:-2]+") VALUES ("     #
-
-    for x in value:
-        string += str(value[x])+", "
-    string = string[0:-2]+")"
-
-    return string
-
-# fait un selct dans _db
-
-
-def select(request, nom_table, condition=None):
-
-    string = f"SELECT "
-
-    if type(request) is list:
-        for x in request:
-            string += x + ", "
-        string = string[0:-2]
-    else:
-        string += request
-
-    if condition:
-        string += " FROM " + str(nom_table) + " WHERE " + condition
-    else:
-        string += " FROM " + str(nom_table)
-
-    return string
-
-
-# définin la liste de _victim => ajoute
-#
-# -- Ajouter 2 lignes de contenu sans définir de valeur pour `id`
-# INSERT INTO `client` (`nom`, `email`) VALUES ('Paul', 'paul@example.com');
-# INSERT INTO `client` (`nom`, `email`) VALUES ('Sandra', 'sandra@example.com');
-
-
-# garde un historique de _db
-
-# ( pour le dernier etat => Grace au dernier etat on peut trouver le)
-# datetime decroissant(order par datetime descendants 0, 1)
-
-
-def get_victim_history(id_victim):
-
-    # 'datetime' entre quote ?
-    string = f"FROM Victims LEFT JOIN States ON Victims.{id_victim} = States.{id_victim} ORDER BY 'datetime' DESC"
-
-    return string
-
-# update
-
-# Changer la valeur d'un tuple
-
-
-def update(table_name, tuple_name, new_value, id_tuple=None):
-
-    if id_tuple:
-        string = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
-
-    else:
-        string = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
-
-    return string
-
-
 def disconnect_from_DB(connection):
+    '''
+    cette fonction s'occupe de déconnecter la bd
+    :param connection: objet sqlite relative à la connection de la bd (carte d'identité)
+    '''
     try:
-        connection.close()  # Déconnexion
+        connection.close()
         print('Déconnexion éffectuée')
 
     except sqlite3.Error as e:
-        print(f"Une erreur est survenue dans la déconnexion: {e}")
+        print(f"Une erreur est survenue dans la déconnexion: {e}")#detecte l'erreur à la deconnection
