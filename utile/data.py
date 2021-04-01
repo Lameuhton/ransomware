@@ -20,56 +20,6 @@ def connect_to_DB(path="../serveur_cles/data/victims.sqlite"):
     return connection, cursor
 
 
-
-def insert(table, value,conn = None, cursor= None):
-    '''
-    :param table:table dans laquelle il faut ajouter des valeurs
-    :param value:valeur à ajouter dans la table
-    :return:la commande sql insert
-    '''
-    query = f"INSERT INTO {table} ("
-
-    for x in value:
-        query += x+", "
-    query = query[0:-2]+") VALUES ("
-
-    for x in value:
-        query += str(value[x])+", "
-    query = query[0:-2]+")"
-
-    if conn and cursor:
-        result = execute_query(conn, cursor)
-        return result
-
-    else:
-        return query
-
-
-
-def update(table_name, tuple_name, new_value, id_tuple=None, conn = None, cursor= None):
-    '''
-    cette fonction creer une requête de type update avec ou sans condition
-    :param table_name:nom table à mettre à jour
-    :param tuple_name:nom tuple à mettre à jour
-    :param new_value:nouvelle valeur pour le(s) tuple(s)
-    :param id_tuple:id utilisé dans la condition
-    :return:
-    '''
-    if id_tuple:
-        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
-
-    else:
-        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
-
-    if conn and cursor:
-        result = execute_query(conn, cursor)
-        return result
-
-    else:
-        return query
-
-
-
 def select(request, nom_table, condition=None, conn = None, cursor= None):
     '''
     cette fonction s'occupe de creer une requête sql qui return un string si conn et cursor si ne sont pas renseigné
@@ -102,6 +52,51 @@ def select(request, nom_table, condition=None, conn = None, cursor= None):
         return query
 
 
+def insert(table, value,conn = None, cursor= None):
+    '''
+    :param table:table dans laquelle il faut ajouter des valeurs
+    :param value:valeur à ajouter dans la table
+    :return:la commande sql insert
+    '''
+    query = f"INSERT INTO {table} ("
+
+    for x in value:
+        query += x+", "
+    query = query[0:-2]+") VALUES ("
+
+    for x in value:
+        query += str(value[x])+", "
+    query = query[0:-2]+")"
+
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
+
+
+def update(table_name, tuple_name, new_value, id_tuple=None, conn = None, cursor= None):
+    '''
+    cette fonction creer une requête de type update avec ou sans condition
+    :param table_name:nom table à mettre à jour
+    :param tuple_name:nom tuple à mettre à jour
+    :param new_value:nouvelle valeur pour le(s) tuple(s)
+    :param id_tuple:id utilisé dans la condition
+    :return:
+    '''
+    if id_tuple:
+        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
+
+    else:
+        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
+
+    if conn and cursor:
+        result = execute_query(conn, cursor)
+        return result
+
+    else:
+        return query
 
 
 def get_victim_history(id_victim=None,conn = None, cursor= None):
