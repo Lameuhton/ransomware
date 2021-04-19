@@ -49,7 +49,7 @@ def connect_to_serv(adresse="localhost", port=8380, secured=True):
         # Se connecte au serveur d'ip "localhost" avec comme port 8380
         socket_serv.connect((adresse, port))
 
-         # Génération d'un chiffre g et un nombre premier p
+        # Génération d'un chiffre g et un nombre premier p
         if secured:
             dict_g_p = [randint(9, 99), getPrime(12)]
             return socket_serv, dict_g_p
@@ -57,7 +57,7 @@ def connect_to_serv(adresse="localhost", port=8380, secured=True):
             return socket_serv
 
     except socket.error as e:
-        print(f'[+] Impossible de se connecter :\n    {e}') # Retourne une erreur si la connexion ne fonctionne pas
+        print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
         return None, None
 
 
