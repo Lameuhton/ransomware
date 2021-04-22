@@ -1,10 +1,10 @@
 from base64 import b64encode, b64decode
 import hashlib
-from Cryptodome.Cipher import AES
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.Util.number import getRandomInteger
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.number import getRandomInteger
 import utile.network as net
-
+import pickle
 
 def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     """
@@ -19,20 +19,20 @@ def AES_GCM_encrypt(plain_text, DiffieHellman_key):
 
     # Generation d'une clé grâce au mot de passe
     private_key = hashlib.scrypt(
-        DiffieHellman_key.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+        pickle.dumps(DiffieHellman_key), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
 
     # création d'un objet cypher servant à encrypter les données avec la méthode GCM
     cipher_config = AES.new(private_key, AES.MODE_GCM)
 
     # récupération du texte chiffré et d'un tag
-    cipher_text, tag = cipher_config.encrypt_and_digest(bytes(plain_text, 'utf-8'))
+    cipher_text, tag = cipher_config.encrypt_and_digest(pickle.dumps(plain_text))
 
     # Retourne un dictionnaire contenant toutes les informations nécessaires
     return {
-        'cipher_text': b64encode(cipher_text).decode('utf-8'),
-        'salt': b64encode(salt).decode('utf-8'),
-        'nonce': b64encode(cipher_config.nonce).decode('utf-8'),
-        'tag': b64encode(tag).decode('utf-8')
+        'cipher_text': cipher_text,
+        'salt': salt,
+        'nonce': cipher_config.nonce,
+        'tag':tag
     }
 
 
@@ -48,20 +48,20 @@ def AES_GCM_decrypt(enc_dict, DiffieHellman_key):
     :return: retourne la donné dans son état initial (STR, liste, dictionnaire, ...)
     """
     # decode le dictionnaire avec base64 (retour vers la forme binaire)
-    salt = b64decode(enc_dict['salt'])
-    cipher_text = b64decode(enc_dict['cipher_text'])
-    nonce = b64decode(enc_dict['nonce'])
-    tag = b64decode(enc_dict['tag'])
+    salt = enc_dict['salt']
+    cipher_text = enc_dict['cipher_text']
+    nonce = enc_dict['nonce']
+    tag = enc_dict['tag']
 
     # Generation d'une clé grâce au mot de passe
     private_key = hashlib.scrypt(
-        DiffieHellman_key.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+        pickle.dumps(DiffieHellman_key), salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
 
     # réation d'un objet cypher servant à encrypter les données
     cipher = AES.new(private_key, AES.MODE_GCM, nonce=nonce)
 
     # decryptage du message
-    decrypted = bytes.decode(cipher.decrypt_and_verify(cipher_text, tag))
+    decrypted = pickle.loads(cipher.decrypt_and_verify(cipher_text, tag))
 
     return decrypted
 
