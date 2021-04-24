@@ -4,36 +4,35 @@ DROP TABLE if exists states;
 DROP TABLE if exists encrypted;
 
 CREATE TABLE victims (
-    id_victim INT PRIMARY KEY UNIQUE NOT NULL,
-    os VARCHAR(100),
+    id_victim INTEGER PRIMARY KEY,
     hash VARCHAR(100),
+    os VARCHAR(100),
     disks VARCHAR(100),
     key VARCHAR(100)
 
 );
 
 CREATE TABLE decrypted (
-    id_decrypted INT PRIMARY KEY UNIQUE NOT NULL,
-    id_victim INT,
-    datetime DATE,
+    id_decrypted INTEGER PRIMARY KEY,
+    id_victim INTEGER,
+    datetime TIMESTAMP NOT NULL DEFAULT(current_timestamp),
     nb_file INT,
     FOREIGN KEY (id_victim) REFERENCES Victims(id_victim)
 
 );
 
 CREATE TABLE states (
-    id_state INT PRIMARY KEY UNIQUE NOT NULL,
-    id_victim INT,
-    datetime DATE,
-    nb_file INT,
+    id_state INTEGER PRIMARY KEY,
+    id_victim INTEGER,
+    datetime TIMESTAMP NOT NULL DEFAULT(current_timestamp),
+    state INT,
     FOREIGN KEY (id_victim) REFERENCES Victims(id_victim)
-
 );
 
 CREATE TABLE encrypted (
-    id_encrypted INT PRIMARY KEY UNIQUE NOT NULL,
-    id_victim INT,
-    datetime DATE,
+    id_encrypted INTEGER PRIMARY KEY,
+    id_victim INTEGER,
+    datetime TIMESTAMP NOT NULL DEFAULT(current_timestamp),
     nb_file INT,
     FOREIGN KEY (id_victim) REFERENCES Victims(id_victim)
 

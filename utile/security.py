@@ -1,10 +1,10 @@
-from base64 import b64encode, b64decode
 import hashlib
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.number import getRandomInteger
 import utile.network as net
 import pickle
+
 
 def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     """
@@ -32,7 +32,7 @@ def AES_GCM_encrypt(plain_text, DiffieHellman_key):
         'cipher_text': cipher_text,
         'salt': salt,
         'nonce': cipher_config.nonce,
-        'tag':tag
+        'tag': tag
     }
 
 
