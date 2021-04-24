@@ -1,15 +1,7 @@
-import sqlite3
-#from ..utile import network
-from ..utile import data
-#from ..utile import message
+from ..utile import network as net
+from ..utile import message as mess
 
-# NOTE
-#___________________________________________
-# La fonction "data.recup_data_victime" serait la fonction que Gaetan fera dans le module Data pour me retourner les infos des victimes à l'aide de requêtes SQL.
-# J'ai imaginé qu'e cette fonction aurait 2 paramètres, le premier "choix", et le deuxième "id_victime" et celui-ci serait à None par défaut si sa valeur n'est pas fournie lors de l'appel de la fonction.
-# Le paramètre "choix" aurait soit la valeur 1, soit la valeur 2 lorsque j'appelle la fonction
-# Si la valeur est a 1, la fonction devra me renvoyer exactement ce qu'il me faut à afficher pour le choix 1, si elle est a 2, je fournirai alors une valeur au paramètre "id_victime"
-#___________________________________________
+
 
 def choix_victime(new_data_victimes):
     # Demande du numéro de la victime
@@ -105,39 +97,64 @@ def afficher_rancon_victime(new_data_victimes):
 
 if __name__ == "__main__":
 
-    data_victimes = None
+    # Connexion au serveur
+    serv = net.connect_to_serv()
 
-    #Affiche une première fois le menu et stocke le choix
+    # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
+    ordre_choix = False
+
+    # Affiche une première fois le menu et stocke le choix
     num_choix = choix_action()
 
-    #Boucle tant que l'utilisateur ne choisi pas le quatrième choix (quitter)
+    # Boucle tant que l'utilisateur ne choisi pas le quatrième choix (quitter)
     while num_choix != 4:
 
-        #Premier choix:
+        # Premier choix:
         if num_choix == 1:
-            #Appelle la fonction qui ira récupérer les infos des victimes dans la bdd
-            data_victimes = data.recup_data_victime(1)
+
+            # On change la valeur de la variable puisque l'utilisateur a fait le premier choix
+            ordre_choix = True
+            # Envoie au serveur la requête de liste des victimes
+            net.send_message(serv,mess.set_message('LIST_VICTIMS_REQ'))
+            # Création d'une liste vide qui contiendra la liste des victimes et d'une variable temp pour pouvoir boucler sur la boucle while d'en dessous
+            liste_victime = []
+            temp = True
+            # Boucle qui ajoute les victimes dans la liste "liste_victimes"
+            while temp:
+                victime = net.receive_message(serv)
+                if mess.set_message(victime) == 'LIST_VICTIM_RESP':
+                    liste_victime.append(victime)
+                    continue
+                elif mess.set_message(victime) == 'LIST_VICTIM_END':
+                    temp = False
+
             # A partir de data_victimes, création d'une nouvelle liste de listes (et plus de tuple) avec les infos des victimes
-            new_data_victimes = []
-            for val in data_victimes:
-                new_data_victimes.append(list(val))
+            #new_data_choix1 = []
+            #for val in data_choix1:
+                #new_data_choix1.append(list(val))
 
-            afficher_liste_victime(new_data_victimes)
+            afficher_liste_victime(liste_victime)
 
-        #Deuxième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
+        # Deuxième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
         elif num_choix == 2:
-            if data_victimes != None:
+
+            if ordre_choix:
                 afficher_historique_victime(new_data_victimes)
             else:
                 print("\nERREUR : Veuillez d'abord lister les victimes!\n")
 
-        #Troisième choix:
+        # Troisième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
         elif num_choix == 3:
-            afficher_rancon_victime()
+
+            if ordre_choix:
+                afficher_rancon_victime()
+            else:
+                print("\nERREUR : Veuillez d'abord lister les victimes!\n")
+
 
         num_choix = choix_action()
 
-
+    # Ferme la fenêtre lorsque le choix est 4
     exit()
 
 

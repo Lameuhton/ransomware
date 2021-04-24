@@ -1,7 +1,7 @@
 import socket
 import ipaddress
 import pickle
-from Cryptodome.Util.number import getPrime
+from Crypto.Util.number import getPrime
 from random import randint
 
 HEADERSIZE = 10
