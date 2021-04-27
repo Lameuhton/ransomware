@@ -1,14 +1,24 @@
-import utile.network as net
-import utile.message as message
+import multiprocessing as mp
 import utile.data as data
+import utile.message as message
+import utile.network as net
+
 
 # Lancement du serveur clé écoutant (de base) en local sur le port 8380
-socket = net.start_net_serv_client()
+def Console_Controle(FIFO):
+    socket = net.start_net_serv_client()
+    FIFO.put(corps(socket))
 
-while True:
+def Serveur_Frontal(FIFO):
+    socket = net.start_net_serv_client(port=8381)
+    FIFO.put(corps(socket))
+
+
+def corps(socket):
+
     # Reception d'un message
     recv_data = net.receive_message(socket)
-    print(recv_data)
+
     # Vérification de l'identité du message
     message_type = message.get_message_type(recv_data)
 
@@ -39,10 +49,28 @@ while True:
         # Envoi du résultat
         net.send_message(socket, message.set_message('HISTORY_RESP', result[0]))
         packet = message.set_message('HISTORY_END', [recv_data['HIST_REQ']])
-        print(packet)
         net.send_message(socket, packet)
-
 
 
     elif message_type == 'CHANGE_STATE':
         data.change_state(recv_data)
+
+
+def main():
+    mp.set_start_method('spawn')
+    FIFO = mp.Queue()
+    # création des threads
+    Serveur_Frontal_thread = mp.Process(target=Serveur_Frontal, daemon=True, args=(FIFO,))
+    Console_Controle_thread = mp.Process(target=Console_Controle, daemon=True, args=(FIFO,))
+    # Lancement des threads
+    Console_Controle_thread.start()
+    Serveur_Frontal_thread.start()
+
+
+    Serveur_Frontal_thread.join()
+    print('serveur Frontal fini')
+
+    Console_Controle_thread.join()
+    print('console de contrôle fini')
+if __name__ == '__main__':
+    main()

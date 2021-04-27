@@ -48,7 +48,6 @@ def connect_to_serv(adresse="localhost", port=8380, secured=True):
 
         # Se connecte au serveur d'ip "localhost" avec comme port 8380
         socket_serv.connect((adresse, port))
-
         # Génération d'un chiffre g et un nombre premier p
         if secured:
             dict_g_p = [randint(9, 99), getPrime(12)]
@@ -102,3 +101,9 @@ def receive_message(socket):
     unpickled = pickle.loads(data)
 
     return unpickled
+
+def CloseCon(socket):
+    socket.shutdown(1)
+    print('shutdown')
+    socket.close()
+    print('close')
