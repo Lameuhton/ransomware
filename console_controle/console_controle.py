@@ -1,5 +1,5 @@
-from ..utile import network as net
-from ..utile import message as mess
+from utile import network as net
+from utile import message as mess
 
 # Connexion au serveur
 serv = net.connect_to_serv()
@@ -47,7 +47,7 @@ def afficher_liste_victime(data_victimes):
             form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:} fichiers chiffrés"
         elif value['STATE'] == 'PROTECTED':
             form = "{0:5}{1:15}{2:12}{3:15}{4:11}{5:} fichiers déchiffrés"
-        elif value['STATE'] == 'INITIALIZE':
+        else:
             form = "{0:5}{1:15}{2:12}{3:15}{4:11}-"
         # Variable qui contient le hash pour pouvoir le couper après
         hash = value['HASH']
