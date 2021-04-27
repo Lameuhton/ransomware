@@ -2,7 +2,7 @@ from utile import network as net
 from utile import message as mess
 
 # Connexion au serveur
-serv = net.connect_to_serv()
+serv, gp = net.connect_to_serv()
 
 def choix_victime(liste_victime):
     # Demande du numéro de la victime
