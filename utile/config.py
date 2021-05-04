@@ -29,3 +29,5 @@ def creation_fichier_json():
 
     with open("../configure/config/setting.json","w") as f:
         json.dump(setting, f)
+
+def encrypt_

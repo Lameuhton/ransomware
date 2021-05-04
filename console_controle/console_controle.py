@@ -4,39 +4,38 @@ from utile import message as mess
 # Connexion au serveur
 serv, gp = net.connect_to_serv()
 
+#----------------------------------------------------------
 def choix_victime(liste_victime):
     # Demande du numéro de la victime
     nb_victime = len(liste_victime)
-    num_victime = int(input("Entrez le numéro de la victime (de 1 à 4):"))
+    num_victime = int(input(f"\nEntrez le numéro de la victime (de 1 à {nb_victime}): "))
 
     # Vérification de l'input de l'utilisateur
     while 1 > num_victime > nb_victime:
-        print(f"Erreur: veuillez entrer un nombre entre 1 et {nb_victime}")
-        num_victime = int(input(f"Entrez le numéro de la victime (entre 1 et : {nb_victime}"))
+        print(f"\nErreur: veuillez entrer un nombre entre 1 et {nb_victime}")
+        num_victime = int(input(f"\nEntrez le numéro de la victime (entre 1 et {nb_victime}): "))
 
     return num_victime
-
 
 def choix_action():
     """Cette fonction, lorsqu'elle est appelée, affiche un menu et demande à l'utilisateur d'entrer le choix
     correspondant. Elle retourne un entier entre 1 et 4 qui est le choix de la personne. """
 
-    menu = "CONSOLE DE CONTRÔLE\n===================\n1) Liste des victimes du ransomware\n2) Historique des états " \
+    menu = "\nCONSOLE DE CONTRÔLE\n===================\n1) Liste des victimes du ransomware\n2) Historique des états " \
            "d'une victime\n3) Renseigner le payement de rançon d'une victime\n4) Quitter\nVotre choix: "
     choix = int(input(menu))
 
     # Vérifie que le choix entré est bien entre 1 et 4
     while choix > 4 or choix < 1:
-        print("-----------------------------------------")
+        print("\n-----------------------------------------")
         print("Veuillez entrer un chiffre entre 1 et 4!")
         print("-----------------------------------------")
         choix = int(input(menu))
 
     return choix
 
-
 def afficher_liste_victime(data_victimes):
-    print("LISTING DES VICTIMES DU RANSOMWARE")
+    print("\nLISTING DES VICTIMES DU RANSOMWARE")
     print("----------------------------------")
 
     # Affichage de chaque victime avec un format 'form'
@@ -56,9 +55,8 @@ def afficher_liste_victime(data_victimes):
         print(form.format(str(value['VICTIM']).zfill(4), hash[:14], value['OS'], value['DISKS'], value['STATE'],
                           str(value['NB_FILES'])))
 
-
 def afficher_historique_victime(data_victimes):
-    print("HISTORIQUE DES ETATS D'UNE VICTIME")
+    print("\nHISTORIQUE DES ETATS D'UNE VICTIME")
     print("___________________________________")
 
     form = "{0:20} - {1:14} - {2:20}"
@@ -71,7 +69,6 @@ def afficher_historique_victime(data_victimes):
         else:
             form = "{0:20} - {1:14}"
         print(form.format(str(value['TIMESTAMP']), str(value['STATE']), str(value['NB_FILES'])))
-
 
 def afficher_rancon_victime(data_victimes):
     # Demande le numéro de la victime pour qui la rançon a été payée
@@ -87,7 +84,7 @@ def afficher_rancon_victime(data_victimes):
                 if victime['STATE'] == 'PENDING':
 
                     choix = str.upper(
-                        input(f"Confirmez la demande de déchiffrement pour la victime {victime['VICTIM']} (O/N):"))
+                        input(f"Confirmez la demande de déchiffrement pour la victime {victime['VICTIM']} (O/N): "))
                     if choix == 'O':
 
                         # Envoie au serveur la requête de l'historique d'une victime
@@ -101,7 +98,7 @@ def afficher_rancon_victime(data_victimes):
                 else:
                     print(f"ERREUR : La victime {victime['VICTIM']} est en mode {victime['STATE']}!")
                     afficher_rancon_victime(data_victimes)
-
+#----------------------------------------------------------
 
 if __name__ == "__main__":
 
@@ -172,14 +169,14 @@ if __name__ == "__main__":
 
             if ordre_choix:
 
-                print("VALIDER LE PAIEMENT DE RANCON D'UNE VICTIME")
+                print("\nVALIDER LE PAIEMENT DE RANCON D'UNE VICTIME")
                 print("____________________________________________")
 
                 afficher_rancon_victime(liste_victime)
 
             else:
-                print("\nERREUR : Veuillez d'abord lister les victimes!\n")
-
+                print("\nERREUR: Veuillez d'abord lister les victimes!\n")
+        # Redemande l'action pour savoir si on doit quitter la boucle et quitter ou s'il faut faire autre chose
         num_choix = choix_action()
 
     # Ferme la fenêtre lorsque le choix est 4
