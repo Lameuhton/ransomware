@@ -10,10 +10,12 @@ HEADERSIZE = 10
 def start_net_serv_client(adresse="localhost", port=8380):
     """
     Cette fonction crée un serveur socket écoutant pour une connexion
+    En effet, celui ne permet que créer un serveur et d'écouter, il faudra ensuite
+    ajouter une ligne de type "conn, addr = socket_serv.accept()" permettant
+    d'avoir un meilleur contrôle sur le serveur.
     :param adresse: adresse sur laquelle le serveur se lie (de base localhost)
     :param port: port sur lequelle il se lie (de base 8380)
-    :return: le socket du destinataire // est un nouvel objet socket utilisable pour envoyer et recevoir des
-            données sur la connexion
+    :return: le socket du serveur
     """
     # création d'un socket
     s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
