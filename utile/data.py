@@ -12,7 +12,6 @@ def connect_to_DB(path="../serveur_cles/data/victims.sqlite"):
     try:
         connection = sqlite3.connect(path)
         cursor = connection.cursor()
-        print("Connexion établie")
 
     except sqlite3.Error as e:
         print(f"Une erreur est survenue dans la connexion: {e}")
@@ -196,7 +195,6 @@ def disconnect_from_DB(connection):
     """
     try:
         connection.close()
-        print('Déconnexion éffectuée')
 
     except sqlite3.Error as e:
         print(f"Une erreur est survenue dans la déconnexion: {e}")  # detecte l'erreur à la deconnection

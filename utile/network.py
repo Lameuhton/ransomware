@@ -23,11 +23,7 @@ def start_net_serv_client(adresse="localhost", port=8380):
 
     # Permet au serveur d'attendre une connexion 
     s.listen(0)
-
-    # accepter une connexion et reçoit le socket ainsi que l'adresse du destinataire
-    conn, addr = s.accept()
-    print(f"Connected to {ipaddress.IPv4Address(addr[0])}:{addr[1]}")
-    return conn
+    return s
 
 
 def connect_to_serv(adresse="localhost", port=8380, secured=True):
