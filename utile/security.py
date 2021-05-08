@@ -1,10 +1,11 @@
 import hashlib
+import random
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.number import getRandomInteger
 import utile.network as net
 import pickle
-
+import string
 
 def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     """
@@ -116,3 +117,7 @@ def Diffie_Hellman_exchange_key(socket, g_and_p=None):
 
     common_secret = hashlib.sha256(str(compute_key).encode()).hexdigest()
     return common_secret
+
+def generated_encrypted_key():
+    total_caractere = string.ascii_letters + string.digits
+    return ''.join(random.choice(total_caractere)for i in range(512))

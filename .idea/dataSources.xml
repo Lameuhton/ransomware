@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="SQLite - victims.sqlite" uuid="5e7b6805-a2ff-4429-98fb-c931e4d99d47">
+    <data-source source="LOCAL" name="victims" uuid="c2fdf931-843d-4e78-8fa5-25289ae7ea01">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/serveur_cles/data/victims.sqlite</jdbc-url>
+      <jdbc-url>jdbc:sqlite:D:\ECOLE\Q2\Intégration\EU14-1IS4-Groupe5\ransomware\serveur_cles\data\victims.sqlite</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
+        </library>
+      </libraries>
     </data-source>
   </component>
 </project>

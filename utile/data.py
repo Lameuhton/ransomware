@@ -69,7 +69,7 @@ def insert(table, value, conn=None, cursor=None):
     query = query[0:-2] + ")"
 
     if conn and cursor:
-        result = execute_query(conn, cursor)
+        result = execute_query(conn, cursor, query)
         return result
 
     else:
@@ -88,7 +88,7 @@ def update(table_name, tuple_name, new_value, id_tuple=None, conn=None, cursor=N
     :return:
     """
     if id_tuple:
-        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple} "
+        query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}' WHERE id = {id_tuple}"
 
     else:
         query = f"UPDATE {table_name} SET {tuple_name} = '{new_value}'"
