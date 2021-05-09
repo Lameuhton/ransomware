@@ -180,4 +180,5 @@ if __name__ == "__main__":
         num_choix = choix_action()
 
     # Ferme la fenêtre lorsque le choix est 4
+    print("Fermeture de la session.")
     exit()
