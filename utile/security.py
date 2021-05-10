@@ -6,6 +6,7 @@ from Crypto.Util.number import getRandomInteger
 import utile.network as net
 import pickle
 import string
+from base64 import b64encode, b64decode
 
 def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     """
@@ -31,7 +32,7 @@ def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     # Retourne un dictionnaire contenant toutes les informations nécessaires
     return {
         'cipher_text': cipher_text,
-        'salt': salt,
+        'salt': b64encode(salt).decode('utf-8'),
         'nonce': cipher_config.nonce,
         'tag': tag
     }
@@ -49,7 +50,7 @@ def AES_GCM_decrypt(enc_dict, DiffieHellman_key):
     :return: retourne la donné dans son état initial (STR, liste, dictionnaire, ...)
     """
     # decode le dictionnaire avec base64 (retour vers la forme binaire)
-    salt = enc_dict['salt']
+    salt = b64decode(enc_dict['salt'])
     cipher_text = enc_dict['cipher_text']
     nonce = enc_dict['nonce']
     tag = enc_dict['tag']
@@ -90,15 +91,7 @@ def Diffie_Hellman_exchange_key(socket, g_and_p=None):
 
     # Si g et p n'ont pas été envoyés
     else:
-        # tentative de recevoir le message
-        try:
-            socket.settimeout(10)
-            g, p = net.receive_message(socket)
-        # Si rien reçu au bout de 10 secondes : retourne un message d'erreur et renvoi None
-
-        except:
-            print(f'[+] Aucunes valeurs de g et p ont été trouvées au bout de 10 secondes\n')
-            return None
+        g, p = net.receive_message(socket)
 
     # génération d'un chiffre aléatoire secret (peinture générée)
     secret_number = getRandomInteger(12)

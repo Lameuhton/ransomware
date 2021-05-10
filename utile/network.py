@@ -1,5 +1,5 @@
 import socket
-import ipaddress
+import time
 import pickle
 from Crypto.Util.number import getPrime
 from random import randint
@@ -28,7 +28,7 @@ def start_net_serv_client(adresse="localhost", port=8380):
     return s
 
 
-def connect_to_serv(adresse="localhost", port=8380, secured=True):
+def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
     """
     Cette fonction crée un socket qui se connectera à un serveur
     :param adresse: l'adresse du serveur sur lequelle se connecter (de base localhost)
@@ -40,22 +40,23 @@ def connect_to_serv(adresse="localhost", port=8380, secured=True):
              Si secured = None :
                                 retourne son propre socket
     """
-    try:
-        # Création du socket
+    # Création du socket
+    while True:
         socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
+        try:
+            # Se connecte au serveur d'ip "localhost" avec comme port 8380
+            socket_serv.connect((adresse, port))
+            # Génération d'un chiffre g et un nombre premier p
+            if secured:
+                dict_g_p = [randint(9, 99), getPrime(12)]
+                return socket_serv, dict_g_p
+            else:
+                return socket_serv
 
-        # Se connecte au serveur d'ip "localhost" avec comme port 8380
-        socket_serv.connect((adresse, port))
-        # Génération d'un chiffre g et un nombre premier p
-        if secured:
-            dict_g_p = [randint(9, 99), getPrime(12)]
-            return socket_serv, dict_g_p
-        else:
-            return socket_serv
-
-    except socket.error as e:
-        print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
-        return None, None
+        except socket.error as e:
+            #print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
+            time.sleep(timeout)
+            continue
 
 
 def send_message(socket_serv, string_data, adresse="127.0.0.1", port=8380):
@@ -91,7 +92,6 @@ def receive_message(socket):
 
     # Reçoit en prioprité les 10 premiers octets étant l'entête renseignant sur la taille exacte du message
     header_from_message, addr = socket.recvfrom(HEADERSIZE)
-
     # Reçoit le message avec la taille exacte du message pour limiter la charge réseau
     data, addr = socket.recvfrom(int(header_from_message))
 
