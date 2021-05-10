@@ -56,6 +56,7 @@ def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
         except socket.error as e:
             #print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
             time.sleep(timeout)
+            print(e)
             continue
 
 
