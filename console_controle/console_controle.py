@@ -103,7 +103,7 @@ def afficher_rancon_victime(data_victimes):
                     afficher_rancon_victime(data_victimes)
 #----------------------------------------------------------
 
-if __name__ == "__main__":
+def main():
 
     # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
     ordre_choix = False
@@ -191,3 +191,6 @@ if __name__ == "__main__":
     # Ferme la fenêtre lorsque le choix est 4
     print("Fermeture de la session.")
     exit()
+
+if __name__ == "__main__":
+    main()

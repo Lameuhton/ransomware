@@ -2,11 +2,12 @@ from utile import network as net
 from utile import message as mess
 import json
 import glob
+import os
 from cryptography.fernet import Fernet
 
 
 # Connexion au serveur
-serv, gp = net.connect_to_serv()
+# serv, gp = net.connect_to_serv()
 #----------------------------------------------------------
 def lister_chemins_fichiers(disque):
 
@@ -62,20 +63,34 @@ def load_config(name):
     :return: dict, contient le contenu du fichier de configuration sous forme de dictionnaire
     """
 
-    # Ouvre le fichier cfg correspondant, lis son contenu et le stocke
-    file = open(f"{name}.cfg", "r")
-    content_config = file.read()
-    # Transforme le contenu (au format json) en dictionnaire
-    content_config = json.loads(content_config)
-    file.close()
+    if os.path.isfile(f"../configure/config/{name}.cfg"):
+        # Ouvre le fichier cfg correspondant, lis son contenu et le stocke
+        file = open(f"../configure/config/{name}.cfg", "r")
+        content = file.read()
 
-    # Ouvre le fichier key correspondant, lis son contenu et le stocke
-    file = open(f"{name}.key", "r")
-    key_config = file.read()
-    file.close()
+        if content != "": # Si le fichier n'est pas vide
 
-    # Decrypte le contenu qui a été récupéré du fichier cfg avec la clé qui a été récupérée du fichier key
-    content_decrypted = decrypt(content_config,key_config)
+            # Transforme le contenu (au format json) en dictionnaire
+            content = json.loads(content)
+
+            new_content = content.encode("UTF-8")
+
+            # Ouvre le fichier key correspondant, lis son contenu et le stocke
+            file = open(f"../configure/config/{name}.key", "rb")
+            key_config = file.read()
+
+            print("\nConfiguration chargée")
+
+            # Decrypte le contenu qui a été récupéré du fichier cfg avec la clé qui a été récupérée du fichier key
+            content_decrypted = decrypt(new_content, key_config)
+
+        else: # Si le fichier est vide
+            content_decrypted = {}
+            print("\nConfiguration chargée")
+    else:
+        print("\n ERREUR: Ce fichier de configuration n'existe pas! Veuillez le créer (choix  5) pour pouvoir le charger.")
+        content_decrypted = None
+
 
     return content_decrypted
 
@@ -127,8 +142,11 @@ def create_config(name):
     #                         'STATE': 'INITIALIZE'
     #                         }
 
-    open(f"{name}.cfg", "w")
-    open(f"{name}.key", "w")
+    fichier1 = open(f"../configure/config/{name}.cfg", "w")
+    fichier1.write("")
+
+    generate_key(name)
+
 
 def save_config(contenu_config, name):
     """
@@ -141,25 +159,28 @@ def save_config(contenu_config, name):
     # Transforme le dictionnaire donné en paramètre en json
     content = json.dumps(contenu_config)
 
+    new_content = content.encode("UTF-8")
+
+    generate_key(name)
+
     # Ouvre le fichier key correspondant, lis son contenu et le stocke pour récupérer la clé
-    file = open(f"{name}.key", "r")
+    file = open(f"../configure/config/{name}.key", "rb")
     key = file.read()
-    file.close()
 
     # Encrypte le contenu json
-    encrypted_content = encrypt(content, key)
+    encrypted_content = encrypt(new_content, key)
 
     # Ouvre le fichier cfg courant et remplace son contenu par le dictionnaire crypté
-    fichier = open(f"{name}.cfg", "wb")
+    fichier = open(f"../configure/config/{name}.cfg", "wb")
     fichier.write(encrypted_content)
-    fichier.close()
+
 
 
 
 def encrypt(contenu_config, key):
-    encoded_content = contenu_config.encode()
+    encoded_content = contenu_config
     f = Fernet(key)
-    encrypted_content = f.encrypt(contenu_config)
+    encrypted_content = f.encrypt(encoded_content)
 
     return encrypted_content
 
@@ -178,7 +199,7 @@ def generate_key(name):
     :param name: le nom du fichier de configuration
     """
     key = Fernet.generate_key()
-    with open(f"{name}.key", "wb") as key_file:
+    with open(f"../configure/config/{name}.key", "wb") as key_file:
         key_file.write(key)
 
 '''def creation_fichier_json():
@@ -194,71 +215,72 @@ def generate_key(name):
     with open("../configure/config/setting.json","w") as f:
         json.dump(setting, f)'''
 #----------------------------------------------------------
+def main():
 
-# Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
-ordre_choix = False
+    # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
+    ordre_choix = False
 
-# Affiche une première fois le menu et stocke le choix
-num_choix = choix_action()
-
-contenu_config_courante = ''
-
-# Boucle tant que l'utilisateur ne choisi pas le septième choix (quitter)
-while num_choix != 7:
-
+    # Affiche une première fois le menu et stocke le choix
+    num_choix = int(choix_action())
     contenu_config_courante = ''
     nom_config_courante = ''
 
-    if num_choix == 1: # Lorsque l'utilisateur fait le premier choix
+    # Boucle tant que l'utilisateur ne choisi pas le septième choix (quitter)
+    while num_choix != 7:
 
-        ordre_choix = True
-        print("\nChargement d'une configuration sur disque: ")
-        print("=========================================")
+        if num_choix == 1: # Lorsque l'utilisateur fait le premier choix
 
-        # On récupère le nom de la configuration à charger pour pouvoir savoir quel fichier cfg sera utilisé
-        nom_config_courante = input('\nEntrez le nom de la configuration à charger'
-                     '(stp met "console_controle", "serveur_cles" ou "serveur_frontal" bro, flemme de vérifier): ')
+            ordre_choix = True
+            print("\nChargement d'une configuration sur disque: ")
+            print("=========================================")
 
-        # On utilise la fonciton load_config qui retournera un dictionnaire avec le contenu de la configuration demandée
-        contenu_config_courante = load_config(nom_config_courante)
-        print("\nConfiguration chargée")
+            # On récupère le nom de la configuration à charger pour pouvoir savoir quel fichier cfg sera utilisé
+            nom_config_courante = input('Entrez le nom de la configuration à charger'
+                         '(stp met "console_controle", "serveur_cles" ou "serveur_frontal" bro, flemme de vérifier): ')
 
-    else:
-        # Dans le cas où ce n'est pas le choix 1, vérifie d'abord si le choix 1 à bien été fait avant
-        # (donc qu'une configuration à bien été chargée)
-        if ordre_choix:
+            # On utilise la fonction load_config qui retournera un dictionnaire avec le contenu de la configuration demandée
+            contenu_config_courante = load_config(nom_config_courante)
 
-            if num_choix == 2: # Lorsque l'utilisateur fait le deuxième choix
-                print("\nAffichage de la configuration courante")
-                print("\n======================================")
-                print_config(contenu_config_courante)
-
-            elif num_choix == 3: # Lorsque l'utilisateur fait le troisième choix
-                parametre1 = input("\nQuel paramètre voulez-vous modifier?: ")
-                value = input("\nQuelle valeur voulez-vous donner à ce paramètre?: ")
-                set_config(contenu_config_courante, 1, parametre1, value)
-                print("\nCe paramètre à bien été modifié.")
-
-            elif num_choix == 4: # Lorsque l'utilisateur fait le quatrième choix
-                parametre2 = input("\nQuel paramètre voulez-vous supprimer?: ")
-                set_config(contenu_config_courante, 2, parametre2)
-                print("\nCe paramètre à bien été supprimé.")
-
-            elif num_choix == 5: # Lorsque l'utilisateur fait le cinquième choix
-                create_config(nom_config_courante)
-                print("\nLa configuration courante a été réinitialisée.")
-
-            elif num_choix == 6: # Lorsque l'utilisateur fait le sixième choix
-                save_config(contenu_config_courante,nom_config_courante)
-                print("\nLa configuration courante a été sauvegardée.")
-
-        # Si l'utilisateur fait un autre choix avant même d'avoir fait le choix 1, affiche une erreur
         else:
-            print("\nERREUR : Veuillez d'abord charger une configuration (choix 1)!\n")
 
-    # Redemande l'action pour savoir si on doit quitter la boucle et quitter ou s'il faut faire autre chose
-    num_choix = choix_action()
+            if num_choix == 5: # Lorsque l'utilisateur fait le cinquième choix
+                nom_config_courante = input("Veuillez entrer le nom de la configuration à créer/réinitialiser: ")
+                create_config(nom_config_courante)
+                print("\nLa configuration courante a été créée/réinitialisée.")
 
-# Ferme la fenêtre lorsque le choix est 7
-print("\nFermeture de la session.")
-exit()
+            # Dans le cas où ce n'est pas le choix 1 ou 5, vérifie d'abord si le choix 1 à bien été fait avant
+            # (donc qu'une configuration à bien été chargée)
+            elif ordre_choix:
+
+                if num_choix == 2: # Lorsque l'utilisateur fait le deuxième choix
+                    print("\nAffichage de la configuration courante")
+                    print("======================================")
+                    print_config(contenu_config_courante)
+
+                elif num_choix == 3: # Lorsque l'utilisateur fait le troisième choix
+                    parametre1 = input("\nQuel paramètre voulez-vous modifier?: ")
+                    value = input("\nQuelle valeur voulez-vous donner à ce paramètre?: ")
+                    set_config(contenu_config_courante, 1, parametre1, value)
+                    print("\nCe paramètre à bien été modifié.")
+
+                elif num_choix == 4: # Lorsque l'utilisateur fait le quatrième choix
+                    parametre2 = input("\nQuel paramètre voulez-vous supprimer?: ")
+                    set_config(contenu_config_courante, 2, parametre2)
+                    print("\nCe paramètre à bien été supprimé.")
+
+                elif num_choix == 6: # Lorsque l'utilisateur fait le sixième choix
+                    save_config(contenu_config_courante,nom_config_courante)
+                    print("\nLa configuration courante a été sauvegardée.")
+
+            else: # Si l'utilisateur fait un autre choix avant même d'avoir fait le choix 1, affiche une erreur
+                print("\nERREUR : Veuillez d'abord charger une configuration (choix 1)!\n")
+
+        # Redemande l'action pour savoir si on doit quitter la boucle et quitter ou s'il faut faire autre chose
+        num_choix = choix_action()
+
+    # Ferme la fenêtre lorsque le choix est 7
+    print("\nFermeture de la session.")
+    exit()
+
+if __name__ == '__main__':
+    main()
