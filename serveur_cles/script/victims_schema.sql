@@ -2,6 +2,7 @@ DROP TABLE if exists victims;
 DROP TABLE if exists decrypted;
 DROP TABLE if exists states;
 DROP TABLE if exists encrypted;
+PRAGMA foreing_keys = ON;
 
 CREATE TABLE victims (
     id_victim INTEGER PRIMARY KEY,

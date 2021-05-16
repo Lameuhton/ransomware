@@ -41,8 +41,8 @@ def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
                                 retourne son propre socket
     """
     # Création du socket
+    socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM) # IPv4 & TCP
     while True:
-        socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
         try:
             # Se connecte au serveur d'ip "localhost" avec comme port 8380
             socket_serv.connect((adresse, port))
@@ -56,7 +56,6 @@ def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
         except socket.error as e:
             #print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
             time.sleep(timeout)
-            print(e)
             continue
 
 
@@ -103,6 +102,4 @@ def receive_message(socket):
 
 def CloseCon(socket):
     socket.shutdown(1)
-    print('shutdown')
     socket.close()
-    print('close')

