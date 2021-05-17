@@ -122,25 +122,6 @@ def create_config(name, path="./"):
     :param name: str, le nom du fichier de configuration qu'il faudra ouvrir
     """
 
-    # Si la suite, ajouter un paramètre type_system à la fonction
-    # config = configparser.ConfigParser()
-    # if type_system == 'WORKSTATION':
-    #     config['VICTIM'] = {'DISKS' : [],
-    #                         'PATHS' : [],
-    #                         'FILE_EXT': [],
-    #                         'FREQ' : '120',
-    #                         'KEY' : None,
-    #                         'STATE' : 'INITIALIZE'
-    #                         }
-    # elif type_system == 'SERVER':
-    #     config['VICTIM'] = {'DISKS': [],
-    #                         'PATHS': [],
-    #                         'FILE_EXT': [],
-    #                         'FREQ': '60',
-    #                         'KEY': None,
-    #                         'STATE': 'INITIALIZE'
-    #                         }
-
     fichier1 = open(f"{path}{name}.cfg", "w")
     fichier1.write("")
 
@@ -224,6 +205,7 @@ def main():
     num_choix = int(choix_action())
     contenu_config_courante = ''
     nom_config_courante = ''
+    path_config_courante = ''
 
     # Boucle tant que l'utilisateur ne choisi pas le septième choix (quitter)
     while num_choix != 7:
@@ -235,38 +217,19 @@ def main():
             print("=========================================")
 
             # On récupère le nom de la configuration à charger pour pouvoir savoir quel fichier cfg sera utilisé
-            num_config = int(input('Entrez une configuration à charger:'
-                                   '1) console contrôle'
-                                   '2) serveur frontal'
-                                   '3) serveur de clés'
-                                   'Votre choix (1, 2 ou 3): '))
-
-            # Vérification de l'entrée
-            while num_config != 1 and num_config != 2 and num_config != 3:
-                print("\nERREUR! Veuillez entrer un chiffre entre 1 et 3!\n")
-                num_config = int(input('Entrez une configuration à charger:'
-                                       '1) console contrôle'
-                                       '2) serveur frontal'
-                                       '3) serveur de clés'
-                                       'Votre choix (1, 2 ou 3): '))
-
-            # Attribution du nom de la configuration courante en fonction du choix de l'utilisateur
-            if num_config == 1:
-                nom_config_courante = 'console_controle'
-            elif num_config == 2:
-                nom_config_courante = 'serveur_frontal'
-            elif num_config == 3:
-                nom_config_courante = 'serveur_cles'
+            nom_config_courante = str(input('Entrez le nom de la configuration à charger: '))
+            path_config_courante = str(input('Entrez le path de la configuration à charger: '))
 
             # On utilise la fonction load_config qui retournera un dictionnaire avec le contenu de la configuration
             # demandée
-            contenu_config_courante = load_config(nom_config_courante)
+            contenu_config_courante = load_config(nom_config_courante,path_config_courante)
 
         else:
 
             if num_choix == 5:  # Lorsque l'utilisateur fait le cinquième choix
                 nom_config_courante = input("Veuillez entrer le nom de la configuration à créer/réinitialiser: ")
-                create_config(nom_config_courante)
+                path_config_courante = input("Veuillez entrer le path de la configuration à créer/réinitialiser: ")
+                create_config(nom_config_courante,path_config_courante)
                 print("\nLa configuration courante a été créée/réinitialisée.")
 
             # Dans le cas où ce n'est pas le choix 1 ou 5, vérifie d'abord si le choix 1 à bien été fait avant
@@ -290,8 +253,10 @@ def main():
                     print("\nCe paramètre à bien été supprimé.")
 
                 elif num_choix == 6:  # Lorsque l'utilisateur fait le sixième choix
-                    save_config(contenu_config_courante, nom_config_courante)
+                    path_config_courante = input("Veuillez entrer le path où sauvegarder la configuration: ")
+                    save_config(contenu_config_courante, nom_config_courante,path_config_courante)
                     print("\nLa configuration courante a été sauvegardée.")
+
 
             else:  # Si l'utilisateur fait un autre choix avant même d'avoir fait le choix 1, affiche une erreur
                 print("\nERREUR : Veuillez d'abord charger une configuration (choix 1)!\n")
