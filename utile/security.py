@@ -8,6 +8,7 @@ import pickle
 import string
 from base64 import b64encode, b64decode
 
+
 def AES_GCM_encrypt(plain_text, DiffieHellman_key):
     """
     Cette fonction chiffre les données via la méthode AES-256 GCM
@@ -108,9 +109,14 @@ def Diffie_Hellman_exchange_key(socket, g_and_p=None):
     # Création du secret commun grâce aux clés reçues
     compute_key = (dest_public_key ** secret_number) % p
 
-    common_secret = hashlib.sha256(str(compute_key).encode()).hexdigest()
+    common_secret = hashlib.sha256(pickle.dumps(str(compute_key))).digest()
     return common_secret
 
+
 def generated_encrypted_key():
+    """
+    Fonction qui génère une clé aléatoire de 512 caractères avec toutes les lettres ASCII et les chiffres
+    :return: la clé de chiffrement
+    """
     total_caractere = string.ascii_letters + string.digits
-    return ''.join(random.choice(total_caractere)for i in range(512))
+    return ''.join(random.choice(total_caractere) for _ in range(512))

@@ -4,6 +4,7 @@ import pickle
 from Crypto.Util.number import getPrime
 from random import randint
 
+# CONSTANTE
 HEADERSIZE = 10
 
 
@@ -31,6 +32,7 @@ def start_net_serv_client(adresse="localhost", port=8380):
 def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
     """
     Cette fonction crée un socket qui se connectera à un serveur
+    :param timeout:
     :param adresse: l'adresse du serveur sur lequelle se connecter (de base localhost)
     :param port: port du serveur sur lequelle se connecter (de base 8380)
     :param secured: Permet de générer les nombres g et p utile pour la méthode Diffie Hellman (valeur de base True)
@@ -41,12 +43,12 @@ def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
                                 retourne son propre socket
     """
     # Création du socket
-    socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM) # IPv4 & TCP
+    socket_serv = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)  # IPv4 & TCP
     while True:
         try:
-            # Se connecte au serveur d'ip "localhost" avec comme port 8380
+            # Se connecte au serveur avec l'ip et le port fourni
             socket_serv.connect((adresse, port))
-            # Génération d'un chiffre g et un nombre premier p
+            # Génération d'un chiffre g et un nombre premier p utile pour diffie Hellman (si secured est True)
             if secured:
                 dict_g_p = [randint(9, 99), getPrime(12)]
                 return socket_serv, dict_g_p
@@ -54,7 +56,9 @@ def connect_to_serv(adresse="localhost", port=8380, timeout=60, secured=True):
                 return socket_serv
 
         except socket.error as e:
-            #print(f'[+] Impossible de se connecter :\n    {e}')  # Retourne une erreur si la connexion ne fonctionne pas
+            print(f'[+] Impossible de se connecter. Nouvel essai dans {timeout} secondes:\n    {e}')
+            # Retourne une erreur si la connexion ne fonctionne pas
+            # attend X secondes avant de réassayer une connexion
             time.sleep(timeout)
             continue
 
@@ -79,27 +83,34 @@ def send_message(socket_serv, string_data, adresse="127.0.0.1", port=8380):
     socket_serv.sendto(convert_bytes, (adresse, port))
 
 
-def receive_message(socket):
+def receive_message(conn):
     """
     Cette fonction permet de recevoir un message.
     L'entête créée dans "send_message()" permet de limiter la charge réseau
     La fonction va d'abord recevoir les 10 premiers caractères du message. Ces données indiqueront la taille du message.
     Ensuite, la fonction décide de recevoir le reste du message qui à comme longueur pile poile le nombre de caractère
     qu'il faut recevoir
-    :param socket: socket du client
+    :param conn: socket du client
     :return: le message retourné en str, dictionnaire, liste, ...
     """
 
     # Reçoit en prioprité les 10 premiers octets étant l'entête renseignant sur la taille exacte du message
-    header_from_message, addr = socket.recvfrom(HEADERSIZE)
+    header_from_message, addr = conn.recvfrom(HEADERSIZE)
     # Reçoit le message avec la taille exacte du message pour limiter la charge réseau
-    data, addr = socket.recvfrom(int(header_from_message))
+    data, addr = conn.recvfrom(int(header_from_message))
 
     # Remet le message dans sa forme initiale (STR, liste, dictionnaire, ...)
     unpickled = pickle.loads(data)
 
     return unpickled
 
-def CloseCon(socket):
-    socket.shutdown(1)
-    socket.close()
+
+def CloseCon(conn):
+    """
+    Cette fonction permet de se déconnecter de la machine distante
+    :param conn: socket du client
+    """
+    # Bloque la communication
+    conn.shutdown(1)
+    # Détruit le socket
+    conn.close()
