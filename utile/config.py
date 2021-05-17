@@ -222,14 +222,14 @@ def main():
 
             # On utilise la fonction load_config qui retournera un dictionnaire avec le contenu de la configuration
             # demandée
-            contenu_config_courante = load_config(nom_config_courante,path_config_courante)
+            contenu_config_courante = load_config(nom_config_courante, path_config_courante)
 
         else:
 
             if num_choix == 5:  # Lorsque l'utilisateur fait le cinquième choix
                 nom_config_courante = input("Veuillez entrer le nom de la configuration à créer/réinitialiser: ")
                 path_config_courante = input("Veuillez entrer le path de la configuration à créer/réinitialiser: ")
-                create_config(nom_config_courante,path_config_courante)
+                create_config(nom_config_courante, path_config_courante)
                 print("\nLa configuration courante a été créée/réinitialisée.")
 
             # Dans le cas où ce n'est pas le choix 1 ou 5, vérifie d'abord si le choix 1 à bien été fait avant
@@ -254,7 +254,7 @@ def main():
 
                 elif num_choix == 6:  # Lorsque l'utilisateur fait le sixième choix
                     path_config_courante = input("Veuillez entrer le path où sauvegarder la configuration: ")
-                    save_config(contenu_config_courante, nom_config_courante,path_config_courante)
+                    save_config(contenu_config_courante, nom_config_courante, path_config_courante)
                     print("\nLa configuration courante a été sauvegardée.")
 
 

@@ -113,7 +113,6 @@ def chiffrer(path):
 def main():
     # Initialisation du fichier config
     cfg_file_ransomware = config.load_config('ransomware')
-
     # if not cfg_file_ransomware:
     #     config.create_config('ransomware')
     #     cfg_file_ransomware = config.load_config('ransomware')

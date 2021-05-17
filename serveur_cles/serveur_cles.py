@@ -128,22 +128,24 @@ def ThreadMaster(FIFO_message_type):
             # Envoi du paquet dans la Queue FIFO correspondante
             for victim in result_pending:
                 list_victim_resp1 = message.set_message("LIST_VICTIM_RESP", victim)
+                print(list_victim_resp1)
                 FIFO_resp.put(list_victim_resp1)
                 # Bloque le code jusqu'à ce qu'un task_done() soit fait
                 FIFO_resp.join()
 
             for victim in result_protected:
                 list_victim_resp2 = message.set_message("LIST_VICTIM_RESP", victim)
+                print(list_victim_resp2)
                 FIFO_resp.put(list_victim_resp2)
                 # Bloque le code jusqu'à ce qu'un task_done() soit fait
                 FIFO_resp.join()
 
             for victim in result_other:
                 list_victim_resp3 = message.set_message("LIST_VICTIM_RESP", victim)
+                print(list_victim_resp3)
                 FIFO_resp.put(list_victim_resp3)
                 # Bloque le code jusqu'à ce qu'un task_done() soit fait
                 FIFO_resp.join()
-
             # Création d'un paquet List_victim_end pour indiquer au destinataire qu'on a terminé d'envoyer des messages
             list_victim_end = message.set_message("LIST_VICTIM_END")
             FIFO_resp.put(list_victim_end)
